@@ -1,0 +1,228 @@
+/*
+ * Copyright 2019-2020 by Security and Safety Things GmbH
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+apply plugin: 'com.android.application'
+apply plugin: 'com.jaredsburrows.license'
+
+android {
+    /**
+     * Compiles against the Azena SDK to make use of APIs provided by the operating system.
+     */
+    compileSdkVersion 'Security and Safety Things GmbH:Security and Safety Things APIs v6:27'
+    /**
+     * Disables app compression in order for the web server to access resources from within the packaged APK.
+     */
+    aaptOptions {
+        noCompress ''
+    }
+    /**
+     * This is to prevent build failures due to a linting error.
+     * The javax library references a package that is not included in android.
+     */
+    lintOptions {
+        lintConfig file("lint.xml")
+    }
+    defaultConfig {
+        manifestPlaceholders = [ applicationLabel: APP_NAME]
+        applicationId 'com.securityandsafetythings.examples.tflitedetector'
+
+        /**
+         * 27 is the only AOSP API version supported by the Azena SDK.
+         */
+        minSdkVersion 27
+        targetSdkVersion 27
+        def majorVersion = 6
+        def minorVersion = 3
+        def patchNumber = 0
+        versionCode majorVersion << 16 | minorVersion << 8 | patchNumber
+        versionName "$majorVersion.$minorVersion.$patchNumber"
+        licenseReport {
+            generateHtmlReport = true
+            copyHtmlReportToAssets = true
+            generateJsonReport = false
+            copyJsonReportToAssets = false
+        }
+    }
+    signingConfigs {
+        /**
+         * Signing configs are needed to generate a release version of the apk.
+         * The following variables should be declared in your ~/.bashrc file, and should correspond to the values from:
+         *
+         * keytool -genkey -v -keystore <key_name>.keystore -alias alias_name -keyalg RSA -keysize 2048 -validity 10000
+         *
+         * SIGNING_KEY_ALIAS = value supplied for alias_name
+         * SIGNING_KEY_PASSWORD = value supplied when continuing the prompts from keytool -genkey
+         * SIGNING_KEYSTORE_PATH = absolute path to <key_name>.keystore
+         * SIGNING_KEYSTORE_PASSWORD = value supplied when continuing the prompts from keytool -genkey
+         */
+        release {
+            keyAlias System.getenv('SIGNING_KEY_ALIAS')
+            keyPassword System.getenv('SIGNING_KEY_PASSWORD')
+            def keystorePath = System.getenv('SIGNING_KEYSTORE_PATH')
+            if (keystorePath == null || keystorePath.isEmpty()) {
+                logger.warn('Path to keystore is invalid!')
+            } else {
+                storeFile file(keystorePath)
+            }
+            storePassword System.getenv('SIGNING_KEYSTORE_PASSWORD')
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+            versionNameSuffix '-release'
+        }
+        debug {
+            versionNameSuffix '-debug'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    /**
+     * Needed to access the webserver directory from the app/src/main/java source directory.
+     */
+    sourceSets {
+        main {
+            java.srcDirs = ['src/main/java', "$project.rootDir/webserver"]
+        }
+    }
+}
+
+dependencies {
+    /**
+     * Android Support Library v27 is used instead of AndroidX, because the Azena SDK currently does not support AndroidX.
+     */
+    implementation 'com.android.support:appcompat-v7:27.1.1'
+    /**
+     * Used to run inference using TensorFlow Lite on images captured by the VideoPipeline. Supports NNAPI acceleration.
+     */
+    implementation 'org.tensorflow:tensorflow-lite:2.5.0'
+    /**
+     * Adds support for GPU acceleration in TensorFlow Lite.
+     */
+    implementation 'org.tensorflow:tensorflow-lite-gpu:2.5.0'
+    /**
+     * Adds support for Hexagon DSP acceleration in TensorFlow Lite.
+     */
+    implementation 'org.tensorflow:tensorflow-lite-hexagon:2.5.0'
+    /**
+     * Used for BitmapUtils - a class that makes Bitmap conversions easy
+     */
+    implementation 'com.securityandsafetythings.jumpsuite:commonhelpers:1.1.0'
+    /**
+     * Used for annotations in RestEndpoint.java and the webserver source folder.
+     */
+    implementation 'javax.ws.rs:javax.ws.rs-api:2.1'
+    /**
+     * Below dependencies are required inside the webserver source folder.
+     */
+    implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'com.google.guava:guava:31.0.1-jre'
+    /**
+     * Used to allow components to easily communicate with one another (e.g. MainService <=> WebServerManager <=> RestEndpoint)
+     */
+    implementation 'org.greenrobot:eventbus:3.1.1'
+}
+
+/**
+ * The folder name that static website assets will be copied to.
+ */
+def websiteAssetPath = 'website'
+/**
+ * Whether the Hexagon shared libraries, which are necessary to use Hexagon delegate, are present or not.
+ */
+def doHexagonDelegateFilesExist = true
+// Add variables to the BuildConfig file that will be generated on building the app. 
+android.applicationVariants.all { variant ->
+    variant.buildConfigField 'String', 'WEBSITE_ASSET_PATH', "\"$websiteAssetPath\""
+    variant.buildConfigField 'boolean', 'DO_HEXAGON_DELEGATE_FILES_EXIST', "$doHexagonDelegateFilesExist"
+}
+
+/**
+ * Copies the generated build directory from the webapp project (generated from yarn build) into the android project's assets directory.
+ */
+task copyWebapp(type: Copy, dependsOn: [':webapp:yarn_build', 'cleanWebAssets']) {
+    from "${project(':webapp').buildDir}"
+    into "${project.projectDir}/src/main/assets/$websiteAssetPath"
+}
+
+/**
+ * Task generates the .env file for the webapp. The .env file is a vue file which contains variables. In this project, the .env
+ * file contains the BASE_URL variable, which is used to register the publicPath in vue.config.js. It also creates variables
+ * for the web page title, and the build path for the webapp.
+ */
+task makeEnvFile()  {
+    doLast {
+        def BASE_URL="BASE_URL=/app/${android.defaultConfig.applicationId}/"
+        def WEB_PAGE_TITLE="VUE_APP_WEB_PAGE_TITLE=$APP_NAME"
+        def BUILD_PATH="BUILD_PATH=${project(':webapp').buildDir}"
+        def envFile = '.env'
+        delete "${project(':webapp').projectDir}/$envFile"
+        new File(project(':webapp').projectDir, envFile).text =
+                """$BASE_URL\n$WEB_PAGE_TITLE\n$BUILD_PATH"""
+    }
+}
+
+/**
+ * This task, at build time, checks if all the files required to create a Hexagon delegate are present.
+ * If the files are present, then it sets a BuildConfig variable DO_HEXAGON_DELEGATE_FILES_EXIST to true.
+ * Otherwise, this variable is set to false.
+ * This variable can then be used at runtime to check if the files required to create a Hexagon delegate are present.
+ */
+task checkHexagonDelegateFiles {
+    doLast {
+        // List of files required for Hexagon delegate.
+        def REQUIRED_HEXAGON_FILES = ["libhexagon_nn_skel.so", "libhexagon_nn_skel_v65.so", "libhexagon_nn_skel_v66.so"]
+        // Directory where the required hexagon delegate shared object files need to be present
+        def LIBS_DIRECTORY= "${project.projectDir}/src/main/jniLibs/arm64-v8a"
+        // List of the files present in the "/src/main/jniLibs/arm64-v8a" folder
+        FileCollection hexagonFilesInApp = files {
+            file("$LIBS_DIRECTORY").listFiles()
+        }
+        // If 'LIBS_DIRECTORY' does not contain any files, set the BuildConfig variable 'DO_HEXAGON_DELEGATE_FILES_EXIST' to false
+        if(hexagonFilesInApp.isEmpty()) {
+            doHexagonDelegateFilesExist = false
+        } else {
+            // Checks whether the required hexagon delegate shared object files are present in the 'LIBS_DIRECTORY'.
+            for(HEXAGON_FILE in REQUIRED_HEXAGON_FILES) {
+                // If any one of the required files are absent set the BuildConfig variable DO_HEXAGON_DELEGATE_FILES_EXIST to false and break
+                if(!hexagonFilesInApp.contains(file("$LIBS_DIRECTORY/$HEXAGON_FILE"))) {
+                    doHexagonDelegateFilesExist = false
+                    break
+                }
+            }
+        }
+        // Set the BuildConfig variable to true/false based on the above checks
+        android.applicationVariants.all { variant ->
+            variant.buildConfigField 'boolean', 'DO_HEXAGON_DELEGATE_FILES_EXIST', "$doHexagonDelegateFilesExist"
+        }
+    }
+}
+
+task cleanWebAssets(type: Delete) {
+    delete "${project.projectDir}/src/main/assets/$websiteAssetPath"
+}
+
+preBuild.dependsOn(checkHexagonDelegateFiles)
+preBuild.dependsOn(copyWebapp)
+clean.finalizedBy(':webapp:clean')
+clean.finalizedBy(cleanWebAssets)
+
+apply from: "$project.rootDir/scripts/osslicenses/osslicenses.gradle"

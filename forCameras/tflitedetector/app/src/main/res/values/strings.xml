@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Error messages for Hexagon DSP -->
+    <string name="hexagon_dsp_files_missing_error">Libraries required for Hexagon DSP are missing. Refer to &lt;a href=\'https://docs.azena.com/developer/computer_vision/getting_started/accelerate_using_tensorflow_lite/run_inference_using_hexagon_delegate\' target=\'_blank\'&gt; this page&lt;/a&gt; for more information.</string>
+    <string name="hexagon_dsp_model_not_quantized_error">To be able to run inference using Hexagon DSP, the model must be quantized.</string>
+    <string name="hexagon_dsp_build_error">Hexagon Delegate is not supported on this device.</string>
+    <!-- Auto -->
+    <string name="acceleration_type_auto_name">Auto</string>
+    <string name="acceleration_type_auto_description">Auto mode uses the first acceleration type that is found (in runtime, in the order of Hexagon DSP \-&gt; GPU \-&gt; None) to be supported by the camera, the app, and the model.</string>
+    <string name="acceleration_type_auto_display_format">Auto (%1$s)</string>
+    <!-- Hexagon DSP -->
+    <string name="acceleration_type_hexagon_dsp_name">Hexagon DSP</string>
+    <string name="acceleration_type_hexagon_dsp_description">Hexagon DSP mode delegates the execution of the model to the DSP available on some Qualcomm SoCs. Any unsupported operations will run on the CPU. Please note that for this acceleration to work, you need to &lt;a href=\'https://docs.azena.com/developer/computer_vision/getting_started/accelerate_using_tensorflow_lite/run_inference_using_hexagon_delegate\' target=\'_blank\'&gt;add the Hexagon libraries to your app&lt;/a&gt;.</string>
+    <!-- GPU -->
+    <string name="acceleration_type_gpu_description">GPU mode delegates the execution of the model to the GPU on the device, if available. Any unsupported operations will run on the CPU.</string>
+    <!-- None -->
+    <string name="acceleration_type_none_name">None</string>
+    <string name="acceleration_type_none_description">No acceleration will be applied. The model will run entirely on the CPU.</string>
+    <!-- NNAPI -->
+    <string name="acceleration_type_nnapi_description">NNAPI mode delegates the execution of the model to a combination of hardware (i.e. GPU, DSP and/or NPU), as determined by the operating system on the device.</string>
+    <!-- Object detector initialization messages -->
+    <string name="object_detector_initialization_success">Detector was initialized with acceleration type %1$s.</string>
+    <string name="object_detector_initialization_error">&lt;span style=\'font-weight: bold;\'&gt;Detector could not be initialized with acceleration type %1$s&lt;/span&gt; - %2$s</string>
+    <string name="object_detector_initialization_thread_interruption">Could not get the status after setting user preferences due to thread interruption.</string>
+</resources>
