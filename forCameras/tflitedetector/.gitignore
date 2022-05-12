@@ -1,8 +1,10 @@
 # app
 .idea/
 .gradle
-./app/build
+app/build
 
 # webapp
-./webapp/build
-./webapp/
+webapp/build
+
+# General
+./.gradle
