@@ -1,0 +1,8 @@
+# app
+.idea/
+.gradle
+./app/build
+
+# webapp
+./webapp/build
+./webapp/
