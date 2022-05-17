@@ -167,29 +167,31 @@ class MainActivity : AppCompatActivity() {
                         val bitmap = drawable.bitmap
                         downloadImage(bitmap)
                     }
-                    .setNegativeButton("No"){
-                        dialog, _ ->
+                    .setNegativeButton("No") { dialog, _ ->
                         dialog.dismiss()
                     }
                     .show()
 
             } else {
-                Toast.makeText(this, "Please allow permission to download image", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Please allow permission to download image", Toast.LENGTH_LONG)
+                    .show()
             }
         }
 
     // fun that a bitmap and store to user's device
-    private fun downloadImage(mBitmap: Bitmap) : Uri? {
+    private fun downloadImage(mBitmap: Bitmap): Uri? {
         val contentValues = ContentValues().apply {
-            put(MediaStore.Images.Media.DISPLAY_NAME, "Birds_Images" +  System.currentTimeMillis()/1000)
+            put(
+                MediaStore.Images.Media.DISPLAY_NAME,
+                "Birds_Images" + System.currentTimeMillis() / 1000
+            )
             put(MediaStore.Images.Media.MIME_TYPE, "image/png")
         }
         val uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-        if(uri != null){
+        if (uri != null) {
             contentResolver.insert(uri, contentValues)?.also {
-                contentResolver.openOutputStream(it).use {
-                    outputStream ->
-                    if(!mBitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)){
+                contentResolver.openOutputStream(it).use { outputStream ->
+                    if (!mBitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)) {
                         throw IOException("Couln't save the bitmap")
                     } else {
                         Toast.makeText(applicationContext, "Image Saved", Toast.LENGTH_LONG).show()
