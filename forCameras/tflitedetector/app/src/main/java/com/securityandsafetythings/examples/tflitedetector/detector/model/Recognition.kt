@@ -3,7 +3,7 @@ package com.securityandsafetythings.examples.tflitedetector.detector.model
 import android.graphics.RectF
 import java.util.Locale
 
-class RecognitionJohn(id: String?, label: String?, confidence: Float?, location: RectF?) {
+class Recognition(id: String?, label: String?, confidence: Float?, location: RectF?) {
 
     // A unique identifier for what has been recognized. Specific to the image
     private var mId: String? = id

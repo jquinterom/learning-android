@@ -26,7 +26,7 @@ import android.util.Log;
 import android.util.Size;
 
 import com.securityandsafetythings.examples.tflitedetector.R;
-import com.securityandsafetythings.examples.tflitedetector.detector.model.RecognitionJohn;
+import com.securityandsafetythings.examples.tflitedetector.detector.model.Recognition;
 import com.securityandsafetythings.examples.tflitedetector.events.OnInferenceCompletedEvent;
 import com.securityandsafetythings.examples.tflitedetector.utilities.EasySharedPreference;
 import com.securityandsafetythings.examples.tflitedetector.utilities.Renderer;
@@ -190,7 +190,7 @@ public class InferenceHandler extends Handler {
      */
     private void handleRunningInference(final Bitmap imageBmp) {
         // Run object detection on the frame Bitmap.
-        final List<RecognitionJohn> detectionResults = detectObjectsInFrame(imageBmp);
+        final List<Recognition> detectionResults = detectObjectsInFrame(imageBmp);
 
         /*
          * Filters detection results that meet or exceed the confidence threshold set in user preferences, renders
@@ -213,7 +213,7 @@ public class InferenceHandler extends Handler {
                 framesProcessedPerSecond).broadcastEvent();
     }
 
-    private List<RecognitionJohn> detectObjectsInFrame(final Bitmap imageBmp) {
+    private List<Recognition> detectObjectsInFrame(final Bitmap imageBmp) {
         /*
          * Take scaled center cut of the image to run detection on
          *
@@ -233,17 +233,17 @@ public class InferenceHandler extends Handler {
             true);
         // Perform object detection using the detector
         final long inferenceStartTime = SystemClock.elapsedRealtime();
-        final List<RecognitionJohn> detectionResults = mDetector.recognizeImage(croppedBitmap);
+        final List<Recognition> detectionResults = mDetector.recognizeImage(croppedBitmap);
         final long inferenceTime = SystemClock.elapsedRealtime() - inferenceStartTime;
         // Increase the total inference time
         mTotalInferenceTime += inferenceTime;
         return detectionResults;
     }
 
-    private byte[] getAnnotatedImageAsBytes(final Bitmap imageBmp, final List<RecognitionJohn> detectionResults) {
+    private byte[] getAnnotatedImageAsBytes(final Bitmap imageBmp, final List<Recognition> detectionResults) {
         // Filter detections that meet the specified minimum confidence threshold
-        final List<RecognitionJohn> filteredDetections = new ArrayList<>();
-        for (RecognitionJohn obj : detectionResults) {
+        final List<Recognition> filteredDetections = new ArrayList<>();
+        for (Recognition obj : detectionResults) {
             if (obj.getConfidence() >= EasySharedPreference.getInstance().getMinConfidenceLevel()) {
                 filteredDetections.add(obj);
             }
