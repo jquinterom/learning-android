@@ -26,6 +26,7 @@ import android.util.Size;
 import com.securityandsafetythings.examples.tflitedetector.BuildConfig;
 import com.securityandsafetythings.examples.tflitedetector.R;
 import com.securityandsafetythings.examples.tflitedetector.TfLiteDetectorApplication;
+import com.securityandsafetythings.examples.tflitedetector.detector.model.RecognitionJohn;
 import com.securityandsafetythings.examples.tflitedetector.enums.AccelerationType;
 import com.securityandsafetythings.examples.tflitedetector.events.OnObjectDetectorInitializationFailedEvent;
 import com.securityandsafetythings.examples.tflitedetector.events.OnObjectDetectorInitializedEvent;
@@ -336,9 +337,9 @@ class ObjectDetector {
      * @return A {@code List<Recognition>} containing all the recognized objects.
      */
     @SuppressWarnings("MagicNumber")
-    List<Recognition> recognizeImage(final Bitmap bitmap) {
+    List<RecognitionJohn> recognizeImage(final Bitmap bitmap) {
         // Return the recognitions in an accessible format
-        final List<Recognition> recognitions = new ArrayList<>(mMaxDetectionsPerImage);
+        final List<RecognitionJohn> recognitions = new ArrayList<>(mMaxDetectionsPerImage);
         if (mModel == null) {
             return recognitions;
         }
@@ -401,7 +402,7 @@ class ObjectDetector {
              * while outputClasses correspond to class index from 0 to number_of_classes
              */
             recognitions.add(
-                new Recognition(
+                new RecognitionJohn(
                 String.valueOf(i),
                 mLabels.get((int)mOutputClasses[0][i]),
                 mOutputScores[0][i],

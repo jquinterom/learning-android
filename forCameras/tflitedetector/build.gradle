@@ -19,6 +19,7 @@
 buildscript {
     ext {
         APP_NAME = 'TFLiteDetector'
+        kotlin_version = '1.4.32'
     }
     repositories {
         /**
@@ -28,6 +29,7 @@ buildscript {
         maven {
             url "https://plugins.gradle.org/m2/"
         }
+        mavenCentral()
     }
     dependencies {
         /**
@@ -51,6 +53,7 @@ buildscript {
          * Checks the project and its dependencies for vulnerabilities
          */
         classpath 'org.owasp:dependency-check-gradle:6.5.2.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         // NOTE: Do not place your application dependencies here; they belong in the individual module-level build.gradle files.
     }
 }

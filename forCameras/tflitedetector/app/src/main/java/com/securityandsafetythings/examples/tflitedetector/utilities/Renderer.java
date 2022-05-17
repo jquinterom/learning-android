@@ -22,6 +22,7 @@ import android.graphics.RectF;
 import android.util.Size;
 
 import com.securityandsafetythings.examples.tflitedetector.detector.Recognition;
+import com.securityandsafetythings.examples.tflitedetector.detector.model.RecognitionJohn;
 
 import java.util.HashMap;
 import java.util.List;
@@ -115,7 +116,7 @@ public final class Renderer {
      * @param canvas The canvas to use for drawing
      * @param objects The objects whose bounding boxes must be rendered.
      */
-    public void render(final Canvas canvas, final List<Recognition> objects) {
+    public void render(final Canvas canvas, final List<RecognitionJohn> objects) {
         canvas.drawPaint(BACKGROUND_PAINT);
         // Shade the areas that were not used in detection
         canvas.drawRect(0, 0, mInputSize.getWidth(), mMargin.getHeight(), NON_DETECTED_AREA_PAINT);
@@ -128,7 +129,7 @@ public final class Renderer {
             mCropArea.getHeight() + mMargin.getHeight(),
             NON_DETECTED_AREA_PAINT);
         // Render each object on the canvas
-        for (Recognition obj : objects) {
+        for (RecognitionJohn obj : objects) {
             final RectF box = translate(obj.getLocation());
             // Draw the translated bounding box
             canvas.drawRect(box, getPaint(obj.getLabel()));

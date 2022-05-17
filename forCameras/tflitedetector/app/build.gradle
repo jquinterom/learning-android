@@ -15,6 +15,7 @@
  */
 
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
 apply plugin: 'com.jaredsburrows.license'
 
 android {
@@ -139,6 +140,7 @@ dependencies {
      * Used to allow components to easily communicate with one another (e.g. MainService <=> WebServerManager <=> RestEndpoint)
      */
     implementation 'org.greenrobot:eventbus:3.1.1'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
 
 /**
@@ -226,3 +228,6 @@ clean.finalizedBy(':webapp:clean')
 clean.finalizedBy(cleanWebAssets)
 
 apply from: "$project.rootDir/scripts/osslicenses/osslicenses.gradle"
+repositories {
+    mavenCentral()
+}
