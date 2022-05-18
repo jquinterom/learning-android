@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { InferenceDTO, UserPreferencesStatusDTO } from "@/interfaces";
+import {InferenceDTO, InfoImageDTO, UserPreferencesStatusDTO} from "@/interfaces";
 import { AxiosResponse } from "axios";
 import httpClient from "./httpClient";
 
@@ -23,6 +23,8 @@ const getInferenceStatistics = (): Promise<AxiosResponse<InferenceDTO>> =>
 const getUserPreferencesStatus = (): Promise<AxiosResponse<UserPreferencesStatusDTO>> =>
   httpClient.get<UserPreferencesStatusDTO>("user-preferences-status");
 
-const getGreet = (): Promise<AxiosResponse<string>> => httpClient.get<string>("hello-jhon");
+const getInfoImage = (): Promise<AxiosResponse<InfoImageDTO>> =>
+  httpClient.get<InfoImageDTO>("scanning-image");
 
-export { getInferenceStatistics, getUserPreferencesStatus, getGreet };
+
+export { getInferenceStatistics, getUserPreferencesStatus, getInfoImage };

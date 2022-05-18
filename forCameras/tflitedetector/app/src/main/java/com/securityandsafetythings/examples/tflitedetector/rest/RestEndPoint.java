@@ -26,6 +26,7 @@ import com.securityandsafetythings.examples.tflitedetector.R;
 import com.securityandsafetythings.examples.tflitedetector.TfLiteDetectorApplication;
 import com.securityandsafetythings.examples.tflitedetector.enums.AccelerationType;
 import com.securityandsafetythings.examples.tflitedetector.rest.dtos.InferenceDTO;
+import com.securityandsafetythings.examples.tflitedetector.rest.dtos.InfoImageDTO;
 import com.securityandsafetythings.examples.tflitedetector.rest.dtos.UserPreferencesDTO;
 import com.securityandsafetythings.examples.tflitedetector.rest.dtos.UserPreferencesStatusDTO;
 import com.securityandsafetythings.examples.tflitedetector.utilities.EasySharedPreference;
@@ -51,6 +52,7 @@ public class RestEndPoint {
     private static final String LOGTAG = RestEndPoint.class.getSimpleName();
     private byte[] mBitmapBytes;
     private InferenceDTO mInferenceDTO;
+    private InfoImageDTO mInfoImageDTO;
     private UserPreferencesStatusDTO mUserPreferencesStatusDTO;
     private CountDownLatch mDetectorInitializationSignal;
 
@@ -78,6 +80,33 @@ public class RestEndPoint {
         mBitmapBytes = compressedImageBytes;
         mInferenceDTO = inferenceDTO;
     }
+
+
+    /**
+     * Gets the statistics from running inference on a frame.
+     *
+     * @return An instance of {@code InferenceDTO}.
+     */
+    @GET
+    @Path("scanning-image")
+    public InfoImageDTO getScanImage() {
+        return mInfoImageDTO;
+    }
+
+    /**
+     * Sets the most recently received {@link Image} annotated with bounding boxes and the statistics from running
+     * inference on this image.
+     *
+     * @param compressedImageBytes A byte array containing the compressed {@link Bitmap} image annotated with bounding
+     *                             boxes from running inference.
+     * @param infoImageDTO         The {@code infoImageDTO} object containing the statistics from running inference
+     *                             on the given {@code Bitmap}.
+     */
+    public synchronized void setInfoForImage(final byte[] compressedImageBytes, final InfoImageDTO infoImageDTO) {
+        mBitmapBytes = compressedImageBytes;
+        mInfoImageDTO = infoImageDTO;
+    }
+
 
     /**
      * Gets the most recent {@link Image} annotated with bounding boxes from running inference as a byte[].
@@ -171,12 +200,6 @@ public class RestEndPoint {
     @Path("acceleration-types")
     public JsonArray getAccelerationTypes() {
         return AccelerationType.getValuesAsJSON();
-    }
-
-    @GET
-    @Path("hello-jhon")
-    public String getGreet() {
-        return "Hello Jhon!";
     }
 
 }

@@ -46,6 +46,7 @@
       :fps="inferenceStatistics.framesProcessedPerSecond"
       :requestedFps="inferenceStatistics.requestedFramesPerSecond"
       :inferenceTime="inferenceStatistics.inferenceTime"
+      :name-bird="infoImage.imageName"
     />
   </div>
 </template>
@@ -54,8 +55,8 @@
 <script lang="ts">
 import {Component, Vue} from "vue-property-decorator";
 import Info from "./Info.vue";
-import {getInferenceStatistics, getUserPreferencesStatus, getGreet} from "@/services/home.api";
-import {InferenceDTO, UserPreferencesStatusDTO} from "@/interfaces";
+import {getInferenceStatistics, getUserPreferencesStatus, getInfoImage} from "@/services/home.api";
+import {InferenceDTO, UserPreferencesStatusDTO, InfoImageDTO} from "@/interfaces";
 
 /**
  * Maps a new vue component called home to this file
@@ -66,6 +67,7 @@ import {InferenceDTO, UserPreferencesStatusDTO} from "@/interfaces";
 })
 export default class Home extends Vue {
   private inferenceStatistics: InferenceDTO | null = null;
+  private infoImage: InfoImageDTO | null = null;
   /**
    * Points to the rest/example/live endpoint
    */
@@ -78,6 +80,8 @@ export default class Home extends Vue {
   private inferenceStatisticsError = "";
 
   private userPreferencesStatusError = "";
+
+  private infoImageStatusError = "";
 
   private userPreferencesStatus: UserPreferencesStatusDTO | null = null;
 
@@ -109,6 +113,19 @@ export default class Home extends Vue {
           this.userPreferencesStatusError = "A network error occurred while attempting to get user preferences status.";
         } else {
           this.userPreferencesStatusError = "Something went wrong while attempting to get user preferences status.";
+        }
+      });
+    getInfoImage()
+      .then((res) => {
+        this.infoImage = res.data;
+        this.infoImageStatusError = ""
+      })
+      .catch((error) => {
+        this.infoImage = null;
+        if (error?.toJSON().message === "Network Error") {
+          this.infoImageStatusError = "A network error occurred while attempting to get user preferences status.";
+        } else {
+          this.infoImageStatusError = "Something went wrong while attempting to get info from image.";
         }
       });
     const url = "rest/example/live?time=" + Date.now();

@@ -54,6 +54,13 @@ export interface UserPreferencesStatusDTO {
 }
 
 /**
+ * Defines the status of the selected user preferences.
+ */
+export interface InfoImageDTO {
+  imageName: string;
+}
+
+/**
  * Defines the details of an acceleration type.
  */
 export interface AccelerationType {

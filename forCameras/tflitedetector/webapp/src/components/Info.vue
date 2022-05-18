@@ -48,6 +48,10 @@
         <span>The time in ms taken by the model to run inference on an image frame.</span>
       </v-tooltip>
     </div>
+    <div class="info-item">
+      <span class="font-weight-bold">Name Bird:</span>
+      {{ nameBird }}
+    </div>
   </div>
 </template>
 
@@ -71,6 +75,10 @@ const Info = Vue.extend({
     },
     inferenceTime: {
       type: Number,
+      required: true,
+    },
+    nameBird: {
+      type: String,
       required: true,
     },
   },

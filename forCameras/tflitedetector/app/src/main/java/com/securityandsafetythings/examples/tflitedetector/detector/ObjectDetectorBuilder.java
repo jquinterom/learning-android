@@ -23,7 +23,8 @@ import com.securityandsafetythings.examples.tflitedetector.enums.AccelerationTyp
  * Configures and builds an {@link ObjectDetector}.
  */
 public class ObjectDetectorBuilder {
-    private String mModelFileName = "detect.tflite";
+    //private String mModelFileName = "detect.tflite";
+    private String mModelFileName = "bird.tflite";
     private int mLabelFileResId = R.raw.labelmap;
     @SuppressWarnings("MagicNumber")
     private int mMaxDetectionsPerImage = 10;

@@ -36,6 +36,7 @@ import com.securityandsafetythings.examples.tflitedetector.events.OnPreferencesS
 import com.securityandsafetythings.examples.tflitedetector.events.StartVideoSessionActionEvent;
 import com.securityandsafetythings.examples.tflitedetector.rest.RestEndPoint;
 import com.securityandsafetythings.examples.tflitedetector.rest.dtos.InferenceDTO;
+import com.securityandsafetythings.examples.tflitedetector.rest.dtos.InfoImageDTO;
 import com.securityandsafetythings.examples.tflitedetector.rest.dtos.UserPreferencesStatusDTO;
 import com.securityandsafetythings.examples.tflitedetector.utilities.EasySharedPreference;
 import com.securityandsafetythings.jumpsuite.commonhelpers.BitmapUtils;
@@ -148,12 +149,17 @@ public class MainService extends VideoService {
             onInferenceCompletedEvent.getFramesProcessedPerSecond(),
             mCapture.getFramerate(),
             displayAccelerationType);
+
+
         /*
          * Store the image on which inference was run (containing bounding boxes, if any were detected) in the RestEndPoint class,
          * so that the frontend can retrieve it via a GET call to rest/example/live.
          * Also, store the InferenceDTO, which contains statistics from the inference operation.
          */
         mRestEndPoint.setImageAndStatistics(onInferenceCompletedEvent.getImageAsBytes(), inferenceDTO);
+
+        final InfoImageDTO infoImageDTO = new InfoImageDTO("Jhon Test");
+        mRestEndPoint.setInfoForImage(onInferenceCompletedEvent.getImageAsBytes(), infoImageDTO);
     }
 
     /**
@@ -219,7 +225,7 @@ public class MainService extends VideoService {
         // Starts the InferenceThread
         startInferenceThread();
         // Configures the detector
-        configureDetector();
+        configureDetector(); // It is not necessary for other model right now ****
         // Send an event to start the video session.
         new StartVideoSessionActionEvent().broadcastEvent();
     }
@@ -269,6 +275,7 @@ public class MainService extends VideoService {
                  * Also, send null for the InferenceDTO since inference was not run on the image.
                  */
                 mRestEndPoint.setImageAndStatistics(BitmapUtils.compressBitmap(BitmapUtils.imageToBitmap(image)), null);
+                mRestEndPoint.setInfoForImage(BitmapUtils.compressBitmap(BitmapUtils.imageToBitmap(image)), null);
                 return;
             }
             /*
