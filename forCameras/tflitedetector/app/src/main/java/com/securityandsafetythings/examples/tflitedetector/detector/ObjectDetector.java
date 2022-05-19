@@ -26,6 +26,7 @@ import android.util.Size;
 import com.securityandsafetythings.examples.tflitedetector.BuildConfig;
 import com.securityandsafetythings.examples.tflitedetector.R;
 import com.securityandsafetythings.examples.tflitedetector.TfLiteDetectorApplication;
+import com.securityandsafetythings.examples.tflitedetector.detector.model.Bird;
 import com.securityandsafetythings.examples.tflitedetector.detector.model.Recognition;
 import com.securityandsafetythings.examples.tflitedetector.enums.AccelerationType;
 import com.securityandsafetythings.examples.tflitedetector.events.OnObjectDetectorInitializationFailedEvent;
@@ -409,6 +410,15 @@ class ObjectDetector {
                 detection));
         }
         return recognitions;
+    }
+
+    /**
+     * Function for recognize Bird
+     * */
+    Bird recognizeImageBird(final Bitmap bitmap){
+        Bird bird = new Bird("", "Bird from Detector", 0.0F, new RectF());
+
+        return bird;
     }
 
     /**

@@ -19,6 +19,7 @@ package com.securityandsafetythings.examples.tflitedetector.detector;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.graphics.RectF;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
@@ -26,6 +27,7 @@ import android.util.Log;
 import android.util.Size;
 
 import com.securityandsafetythings.examples.tflitedetector.R;
+import com.securityandsafetythings.examples.tflitedetector.detector.model.Bird;
 import com.securityandsafetythings.examples.tflitedetector.detector.model.Recognition;
 import com.securityandsafetythings.examples.tflitedetector.events.OnInferenceCompletedEvent;
 import com.securityandsafetythings.examples.tflitedetector.events.OnInferenceCompletedEventBird;
@@ -213,7 +215,10 @@ public class InferenceHandler extends Handler {
                mTotalInferenceTime / mTotalFrames,
                 framesProcessedPerSecond).broadcastEvent();
 
-        new OnInferenceCompletedEventBird(annotatedImageBytes, "Jhon Test 3").broadcastEvent();
+
+        // Processing for birds
+        final Bird bird = getBird(imageBmp);
+        new OnInferenceCompletedEventBird(annotatedImageBytes, bird.getLabel()).broadcastEvent();
     }
 
     private List<Recognition> detectObjectsInFrame(final Bitmap imageBmp) {
@@ -241,6 +246,18 @@ public class InferenceHandler extends Handler {
         // Increase the total inference time
         mTotalInferenceTime += inferenceTime;
         return detectionResults;
+    }
+
+
+    private Bird getBird(final Bitmap imageBmp){
+        final Bitmap croppedBitmap = Bitmap.createBitmap(imageBmp,
+                mMarginLeft,
+                mMarginTop,
+                mCropSize.getWidth(),
+                mCropSize.getHeight(),
+                mScalingMatrix,
+                true);
+        return mDetector.recognizeImageBird(croppedBitmap);
     }
 
     private byte[] getAnnotatedImageAsBytes(final Bitmap imageBmp, final List<Recognition> detectionResults) {

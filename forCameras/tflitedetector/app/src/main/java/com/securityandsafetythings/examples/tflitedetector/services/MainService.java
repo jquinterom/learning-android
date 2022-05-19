@@ -46,13 +46,15 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.util.Objects;
+
 /**
  * This class responds to {@link #onCreate()} and {@link #onDestroy()} methods of the application
  * lifecycle. In order to receive images from the VideoPipeline, {@link MainService} extends
  * {@link VideoService} and implements its callbacks.
- *
+ * <p>
  * The three callbacks are:
- *
+ * <p>
  * 1. {@link #onVideoAvailable(VideoManager)} - Triggered when the {@link VideoManager} is available to request video sessions.
  * 2. {@link #onImageAvailable(ImageReader)} - Triggered when a new {@link Image} is available.
  * 3. {@link #onVideoClosed(VideoSession.CloseReason)} - Triggered when the video session is closed.
@@ -61,7 +63,7 @@ public class MainService extends VideoService {
 
     private static final String LOGTAG = MainService.class.getSimpleName();
     private static final String INFERENCE_THREAD_NAME = String.format("%s%s",
-        MainService.class.getSimpleName(), "InferenceThread");
+            MainService.class.getSimpleName(), "InferenceThread");
     private WebServerConnector mWebServerConnector;
     private RestEndPoint mRestEndPoint;
     private VideoCapture mCapture;
@@ -73,13 +75,13 @@ public class MainService extends VideoService {
     /**
      * {@link #onCreate()} initializes our {@link WebServerConnector}, {@link RestEndPoint}, and
      * {@link RestHandler}.
-     *
+     * <p>
      * The {@link WebServerConnector} acts as the bridge between our application and the webserver
      * which is contained in the Azena SDK.
-     *
+     * <p>
      * The {@link RestEndPoint} is a class annotated with JaxRs endpoint annotations. This is the class
      * that we interact with via HTTP on the front end.
-     *
+     * <p>
      * The {@link RestHandler} acts as a wrapper class for our {@link RestEndPoint}. The Handler registers our
      * {@link RestEndPoint}, and connects it to the WebServer.
      */
@@ -142,9 +144,9 @@ public class MainService extends VideoService {
             displayAccelerationType = requestedAccelerationType.toString();
         }
         final InferenceDTO inferenceDTO = new InferenceDTO(onInferenceCompletedEvent.getInferenceTime(),
-            onInferenceCompletedEvent.getFramesProcessedPerSecond(),
-            mCapture.getFramerate(),
-            displayAccelerationType);
+                onInferenceCompletedEvent.getFramesProcessedPerSecond(),
+                mCapture.getFramerate(),
+                displayAccelerationType);
 
         /*
          * Store the image on which inference was run (containing bounding boxes, if any were detected) in the RestEndPoint class,
@@ -156,12 +158,13 @@ public class MainService extends VideoService {
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     public void onEvent(final OnInferenceCompletedEventBird onInferenceCompletedEventBird) {
-        final InfoImageDTO infoImageDTO = new InfoImageDTO("Jhon Test2");
+        final InfoImageDTO infoImageDTO = new InfoImageDTO(Objects.requireNonNull(onInferenceCompletedEventBird.getName()));
         mRestEndPoint.setInfoForImage(onInferenceCompletedEventBird.getImageAsBytes(), infoImageDTO);
     }
 
     /**
      * Subscribe to OnObjectDetectorInitializedEvent
+     *
      * @param onObjectDetectorInitializedEvent {@code OnObjectDetectorInitializedEvent} object
      */
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
@@ -172,22 +175,23 @@ public class MainService extends VideoService {
          */
         mInitializedAccelerationType = onObjectDetectorInitializedEvent.getAccelerationType();
         mRestEndPoint.setUserPreferencesStatusDTO(
-            new UserPreferencesStatusDTO(getString(R.string.object_detector_initialization_success,
-            onObjectDetectorInitializedEvent.getAccelerationType().toString()), true)
+                new UserPreferencesStatusDTO(getString(R.string.object_detector_initialization_success,
+                        onObjectDetectorInitializedEvent.getAccelerationType().toString()), true)
         );
     }
 
     /**
      * Subscribe to OnObjectDetectorInitializationFailedEvent
+     *
      * @param onObjectDetectorInitializationFailedEvent {@code OnObjectDetectorInitializationFailedEvent} object
      */
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
     public void onEvent(final OnObjectDetectorInitializationFailedEvent onObjectDetectorInitializationFailedEvent) {
         mInitializedAccelerationType = null;
         mRestEndPoint.setUserPreferencesStatusDTO(
-            new UserPreferencesStatusDTO(getString(R.string.object_detector_initialization_error,
-            onObjectDetectorInitializationFailedEvent.getAccelerationType().toString(),
-            onObjectDetectorInitializationFailedEvent.getErrorMessage()), false)
+                new UserPreferencesStatusDTO(getString(R.string.object_detector_initialization_error,
+                        onObjectDetectorInitializationFailedEvent.getAccelerationType().toString(),
+                        onObjectDetectorInitializationFailedEvent.getErrorMessage()), false)
         );
     }
 
@@ -214,7 +218,7 @@ public class MainService extends VideoService {
         // Gets a default VideoCapture instance which does not scale, rotate, or modify the images received from the VideoPipeline.
         mCapture = manager.getDefaultVideoCapture();
         Log.d(LOGTAG, String.format("getDefaultVideoCapture() with width %d and height %d",
-            mCapture.getWidth(), mCapture.getHeight()));
+                mCapture.getWidth(), mCapture.getHeight()));
         /*
          * Request from the VideoPipeline only images of HD resolution (1920 * 1080).
          * With lower resolutions, image manipulations and rendering will be much more performant than dealing with UHD images.
@@ -292,7 +296,7 @@ public class MainService extends VideoService {
     /**
      * This callback would handle all tear-down logic, and is called when the {@link VideoSession} is stopped.
      * Five possible ways for the video session to be stopped are:
-     *
+     * <p>
      * 1. {@link VideoSession.CloseReason#SESSION_CLOSED}
      * 2. {@link VideoSession.CloseReason#VIRTUAL_CAMERA_CONFIGURATION_CHANGED}
      * 3. {@link VideoSession.CloseReason#VIRTUAL_CAMERA_CONFIGURATION_REMOVED}
