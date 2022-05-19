@@ -28,6 +28,7 @@ import android.util.Size;
 import com.securityandsafetythings.examples.tflitedetector.R;
 import com.securityandsafetythings.examples.tflitedetector.detector.model.Recognition;
 import com.securityandsafetythings.examples.tflitedetector.events.OnInferenceCompletedEvent;
+import com.securityandsafetythings.examples.tflitedetector.events.OnInferenceCompletedEventBird;
 import com.securityandsafetythings.examples.tflitedetector.utilities.EasySharedPreference;
 import com.securityandsafetythings.examples.tflitedetector.utilities.Renderer;
 import com.securityandsafetythings.jumpsuite.commonhelpers.BitmapUtils;
@@ -211,6 +212,8 @@ public class InferenceHandler extends Handler {
         new OnInferenceCompletedEvent(annotatedImageBytes,
                mTotalInferenceTime / mTotalFrames,
                 framesProcessedPerSecond).broadcastEvent();
+
+        new OnInferenceCompletedEventBird(annotatedImageBytes, "Jhon Test 3").broadcastEvent();
     }
 
     private List<Recognition> detectObjectsInFrame(final Bitmap imageBmp) {

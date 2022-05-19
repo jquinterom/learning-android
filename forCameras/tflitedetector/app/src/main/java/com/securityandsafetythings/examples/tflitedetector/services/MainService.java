@@ -29,11 +29,7 @@ import com.securityandsafetythings.examples.tflitedetector.BuildConfig;
 import com.securityandsafetythings.examples.tflitedetector.R;
 import com.securityandsafetythings.examples.tflitedetector.detector.InferenceHandler;
 import com.securityandsafetythings.examples.tflitedetector.enums.AccelerationType;
-import com.securityandsafetythings.examples.tflitedetector.events.OnInferenceCompletedEvent;
-import com.securityandsafetythings.examples.tflitedetector.events.OnObjectDetectorInitializationFailedEvent;
-import com.securityandsafetythings.examples.tflitedetector.events.OnObjectDetectorInitializedEvent;
-import com.securityandsafetythings.examples.tflitedetector.events.OnPreferencesStoreUpdatedEvent;
-import com.securityandsafetythings.examples.tflitedetector.events.StartVideoSessionActionEvent;
+import com.securityandsafetythings.examples.tflitedetector.events.*;
 import com.securityandsafetythings.examples.tflitedetector.rest.RestEndPoint;
 import com.securityandsafetythings.examples.tflitedetector.rest.dtos.InferenceDTO;
 import com.securityandsafetythings.examples.tflitedetector.rest.dtos.InfoImageDTO;
@@ -150,16 +146,18 @@ public class MainService extends VideoService {
             mCapture.getFramerate(),
             displayAccelerationType);
 
-
         /*
          * Store the image on which inference was run (containing bounding boxes, if any were detected) in the RestEndPoint class,
          * so that the frontend can retrieve it via a GET call to rest/example/live.
          * Also, store the InferenceDTO, which contains statistics from the inference operation.
          */
         mRestEndPoint.setImageAndStatistics(onInferenceCompletedEvent.getImageAsBytes(), inferenceDTO);
+    }
 
-        final InfoImageDTO infoImageDTO = new InfoImageDTO("Jhon Test");
-        mRestEndPoint.setInfoForImage(onInferenceCompletedEvent.getImageAsBytes(), infoImageDTO);
+    @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
+    public void onEvent(final OnInferenceCompletedEventBird onInferenceCompletedEventBird) {
+        final InfoImageDTO infoImageDTO = new InfoImageDTO("Jhon Test2");
+        mRestEndPoint.setInfoForImage(onInferenceCompletedEventBird.getImageAsBytes(), infoImageDTO);
     }
 
     /**
