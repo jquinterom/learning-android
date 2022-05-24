@@ -26,7 +26,7 @@ import android.util.Size;
 import com.securityandsafetythings.examples.tflitedetector.BuildConfig;
 import com.securityandsafetythings.examples.tflitedetector.R;
 import com.securityandsafetythings.examples.tflitedetector.TfLiteDetectorApplication;
-import com.securityandsafetythings.examples.tflitedetector.detector.model.Bird;
+import com.securityandsafetythings.examples.tflitedetector.detector.model.Mobile;
 import com.securityandsafetythings.examples.tflitedetector.detector.model.Recognition;
 import com.securityandsafetythings.examples.tflitedetector.enums.AccelerationType;
 import com.securityandsafetythings.examples.tflitedetector.events.OnObjectDetectorInitializationFailedEvent;
@@ -72,8 +72,10 @@ class ObjectDetector {
     private final int mMaxDetectionsPerImage;
     // Ordered list mapping from model output to string label
     private List<String> mLabels;
+    private List<String> mLabelsMobile;
     // TensorFlow lite api
     private Interpreter mModel;
+    private Interpreter mModelMobile;
     // Whether the model is quantized or not. This affects how input images are processed
     private final boolean mIsQuantized;
     // Holds the int pixel values for each image
@@ -115,29 +117,31 @@ class ObjectDetector {
 
     /**
      * Constructs an {@code ObjectDetector}.
-     *
+     * <p>
      * Determines buffer sizes and loads the specified model and labels.
      *
-     * @param modelFileName The name of the model file. This file will be loaded from the app's assets directory.
-     * @param labelFileResId The resource id of the label file stored in '/res/raw/'.
-     * @param maxDetectionsPerImage The maximum number of detections per image as indicated by the model.
-     * @param inputSize The size of the input the model expects, denoted by inputSize x inputSize.
-     * @param numThreads The number of threads that TensorFlow should be instructed to use.
+     * @param modelFileName             The name of the model file. This file will be loaded from the app's assets directory.
+     * @param labelFileResId            The resource id of the label file stored in '/res/raw/'.
+     * @param maxDetectionsPerImage     The maximum number of detections per image as indicated by the model.
+     * @param inputSize                 The size of the input the model expects, denoted by inputSize x inputSize.
+     * @param numThreads                The number of threads that TensorFlow should be instructed to use.
      * @param allowFp16PrecisionForFp32 When set, optimizes memory at the cost of accuracy by using 16 bit floating
      *                                  point numbers rather than 32 bit.
-     * @param isQuantized Defines whether the input model is quantized (lossy compressed) or not.
-     *                    This is a property of the model and must be set accordingly.
-     * @param accelerationType The {@code AccelerationType} that will be used to run inference on images.
+     * @param isQuantized               Defines whether the input model is quantized (lossy compressed) or not.
+     *                                  This is a property of the model and must be set accordingly.
+     * @param accelerationType          The {@code AccelerationType} that will be used to run inference on images.
      */
     @SuppressWarnings("MagicNumber")
     ObjectDetector(final String modelFileName,
-        final @RawRes int labelFileResId,
-        final int maxDetectionsPerImage,
-        final int inputSize,
-        final int numThreads,
-        final boolean allowFp16PrecisionForFp32,
-        final boolean isQuantized,
-        final AccelerationType accelerationType) {
+                   final String modelFileNameMobile,
+                   final @RawRes int labelFileResId,
+                   final @RawRes int labelFileResIdMobile,
+                   final int maxDetectionsPerImage,
+                   final int inputSize,
+                   final int numThreads,
+                   final boolean allowFp16PrecisionForFp32,
+                   final boolean isQuantized,
+                   final AccelerationType accelerationType) {
         mContext = TfLiteDetectorApplication.getAppContext();
         mInputSize = inputSize;
         mMaxDetectionsPerImage = maxDetectionsPerImage;
@@ -152,17 +156,19 @@ class ObjectDetector {
         // Check if we are using Auto mode.
         mIsAuto = accelerationType == AccelerationType.AUTO;
         // Initializes the Interpreter as per requested by the user. If Auto mode is used, an optimal AccelerationType is used.
-        initializeInterpreter(accelerationType, modelFileName, labelFileResId, numThreads, allowFp16PrecisionForFp32);
+        initializeInterpreter(accelerationType, modelFileName, modelFileNameMobile, labelFileResId, labelFileResIdMobile, numThreads, allowFp16PrecisionForFp32);
     }
 
     private boolean initializeInterpreter(final AccelerationType accelerationType,
-        final String modelFileName,
-        final @RawRes int labelFileResId,
-        final int numThreads,
-        final boolean allowFp16PrecisionForFp32) {
+                                          final String modelFileName,
+                                          final String modelFileNameMobile,
+                                          final @RawRes int labelFileResId,
+                                          final @RawRes int labelFileResIdMobile,
+                                          final int numThreads,
+                                          final boolean allowFp16PrecisionForFp32) {
         if (accelerationType == AccelerationType.AUTO) {
             // If using Auto mode, find the optimal AccelerationType and initialize the Interpreter with it.
-            initializeOptimalInterpreter(modelFileName, labelFileResId, numThreads, allowFp16PrecisionForFp32);
+            initializeOptimalInterpreter(modelFileName, modelFileNameMobile, labelFileResId, labelFileResIdMobile, numThreads, allowFp16PrecisionForFp32);
             return true;
         }
         // Configure TensorFlow interpreter options from parameters
@@ -176,7 +182,7 @@ class ObjectDetector {
                 // If the delegate was not instantiated successfully, return false and exit early.
                 return false;
             }
-            mCloseable = (AutoCloseable)delegate;
+            mCloseable = (AutoCloseable) delegate;
             options.addDelegate(delegate);
         }
         try {
@@ -185,6 +191,12 @@ class ObjectDetector {
                     mContext.getAssets(), modelFileName), options);
             // Prepare the labels
             mLabels = ResourceHelper.loadLabels(mContext, labelFileResId);
+
+            mModelMobile = new Interpreter(ResourceHelper.loadModelFile(
+                    mContext.getAssets(), modelFileNameMobile), options);
+
+            // Prepare the labels
+            mLabelsMobile = ResourceHelper.loadLabels(mContext, labelFileResIdMobile);
             new OnObjectDetectorInitializedEvent(accelerationType).broadcastEvent();
             // Successfully initialized the interpreter.
             Log.i(LOGTAG, "ObjectDetector configured with acceleration mode " + accelerationType);
@@ -205,13 +217,15 @@ class ObjectDetector {
     }
 
     private void initializeOptimalInterpreter(final String modelFileName,
-        final @RawRes int labelFileResId,
-        final int numThreads,
-        final boolean allowFp16PrecisionForFp32) {
+                                              final String modelFileNameMobile,
+                                              final @RawRes int labelFileResId,
+                                              final @RawRes int labelFileResIdMobile,
+                                              final int numThreads,
+                                              final boolean allowFp16PrecisionForFp32) {
         // Try each AccelerationType in the list until a working one is found, or an exception is thrown.
         for (AccelerationType accelerationTypeToTry : AUTO_ACCELERATION_TYPES) {
             // Initializes the Interpreter based on the acceleration type
-            if (initializeInterpreter(accelerationTypeToTry, modelFileName, labelFileResId, numThreads, allowFp16PrecisionForFp32)) {
+            if (initializeInterpreter(accelerationTypeToTry, modelFileName, modelFileNameMobile, labelFileResId, labelFileResIdMobile, numThreads, allowFp16PrecisionForFp32)) {
                 // When the Interpreter is initialized successfully, break out of the loop.
                 break;
             }
@@ -221,31 +235,31 @@ class ObjectDetector {
     private Delegate createDelegate(final AccelerationType accelerationType, final boolean allowFp16PrecisionForFp32) {
         Delegate delegate = null;
         switch (accelerationType) {
-        case NNAPI:
-            // Add the NNAPI Delegate
-            final NnApiDelegate.Options nnApiDelegateOptions = new NnApiDelegate.Options();
-            nnApiDelegateOptions.setAllowFp16(allowFp16PrecisionForFp32);
-            delegate = new NnApiDelegate(nnApiDelegateOptions);
-            break;
-        case GPU:
-            // If the device has a supported GPU, add the GPU delegate.
-            final GpuDelegate.Options delegateOptions = new CompatibilityList().getBestOptionsForThisDevice();
-            /*
-             * To enable GPU support for quantized models, set 'setQuantizedModelsAllowed()' to true.
-             * While the TensorFlow documentation states that this is set to true by default, our empirical
-             * testing has shown that it is not.
-             */
-            delegateOptions.setQuantizedModelsAllowed(mIsQuantized);
-            /*
-             * For the GpuDelegate to work correctly, it is important to create the GpuDelegate with GpuDelegate.Options.
-             * If the options are omitted, inference will not be executed on the GPU.
-             */
-            delegate = new GpuDelegate(delegateOptions);
-            break;
-        case HEXAGON_DSP:
-            delegate = createHexagonDelegate();
-            break;
-        default:
+            case NNAPI:
+                // Add the NNAPI Delegate
+                final NnApiDelegate.Options nnApiDelegateOptions = new NnApiDelegate.Options();
+                nnApiDelegateOptions.setAllowFp16(allowFp16PrecisionForFp32);
+                delegate = new NnApiDelegate(nnApiDelegateOptions);
+                break;
+            case GPU:
+                // If the device has a supported GPU, add the GPU delegate.
+                final GpuDelegate.Options delegateOptions = new CompatibilityList().getBestOptionsForThisDevice();
+                /*
+                 * To enable GPU support for quantized models, set 'setQuantizedModelsAllowed()' to true.
+                 * While the TensorFlow documentation states that this is set to true by default, our empirical
+                 * testing has shown that it is not.
+                 */
+                delegateOptions.setQuantizedModelsAllowed(mIsQuantized);
+                /*
+                 * For the GpuDelegate to work correctly, it is important to create the GpuDelegate with GpuDelegate.Options.
+                 * If the options are omitted, inference will not be executed on the GPU.
+                 */
+                delegate = new GpuDelegate(delegateOptions);
+                break;
+            case HEXAGON_DSP:
+                delegate = createHexagonDelegate();
+                break;
+            default:
         }
         return delegate;
     }
@@ -256,7 +270,7 @@ class ObjectDetector {
         if (!BuildConfig.DO_HEXAGON_DELEGATE_FILES_EXIST) {
             if (!mIsAuto) {
                 new OnObjectDetectorInitializationFailedEvent(
-                    AccelerationType.HEXAGON_DSP, mContext.getString(R.string.hexagon_dsp_files_missing_error)).broadcastEvent();
+                        AccelerationType.HEXAGON_DSP, mContext.getString(R.string.hexagon_dsp_files_missing_error)).broadcastEvent();
             }
             return delegate;
         }
@@ -264,7 +278,7 @@ class ObjectDetector {
         if (!mIsQuantized) {
             if (!mIsAuto) {
                 new OnObjectDetectorInitializationFailedEvent(
-                    AccelerationType.HEXAGON_DSP, mContext.getString(R.string.hexagon_dsp_model_not_quantized_error)).broadcastEvent();
+                        AccelerationType.HEXAGON_DSP, mContext.getString(R.string.hexagon_dsp_model_not_quantized_error)).broadcastEvent();
             }
             return delegate;
         }
@@ -275,15 +289,15 @@ class ObjectDetector {
             Log.e(LOGTAG, "Hexagon Delegate is not supported on this device.", e);
             if (!mIsAuto) {
                 new OnObjectDetectorInitializationFailedEvent(
-                    AccelerationType.HEXAGON_DSP, mContext.getString(R.string.hexagon_dsp_build_error)).broadcastEvent();
+                        AccelerationType.HEXAGON_DSP, mContext.getString(R.string.hexagon_dsp_build_error)).broadcastEvent();
             }
         } catch (UnsatisfiedLinkError e) {
             // Libraries required for Hexagon delegate are missing from the app.
             Log.e(LOGTAG, "Libraries required for Hexagon Delegate are missing. "
-                + "See https://www.tensorflow.org/lite/performance/hexagon_delegate for more information.", e);
+                    + "See https://www.tensorflow.org/lite/performance/hexagon_delegate for more information.", e);
             if (!mIsAuto) {
                 new OnObjectDetectorInitializationFailedEvent(
-                    AccelerationType.HEXAGON_DSP, mContext.getString(R.string.hexagon_dsp_files_missing_error)).broadcastEvent();
+                        AccelerationType.HEXAGON_DSP, mContext.getString(R.string.hexagon_dsp_files_missing_error)).broadcastEvent();
             }
         }
         return delegate;
@@ -316,20 +330,20 @@ class ObjectDetector {
      * 1. Performs some data preprocessing
      * Populates the `imgData` input array with bytes from the bitmap in RGB order
      * Normalizes data if necessary
-     *
+     * <p>
      * 2. Inference
      * Sets up inputs and outputs for the TensorFlow lite api `runForMultipleInputsOutputs`
      * https://www.tensorflow.org/lite/guide/inference
-     *
+     * <p>
      * Inputs
      * Object[1]: our imgData array is the sole element
-     *
+     * <p>
      * Outputs (in index order)
      * Location array: format is [top, left, bottom, right]
      * Object class id: mapped to human readable label using the label map
      * Confidence: float in range from 0 to 1
      * Detection Count: how many objects were detected in the frame
-     *
+     * <p>
      * 3. Maps outputs to
      * {@link Recognition} objects
      * for easier use.
@@ -354,9 +368,9 @@ class ObjectDetector {
                 final int pixelValue = mPixelValues[i * mInputSize + j];
                 if (mIsQuantized) {
                     // Quantized model
-                    mImgData.put((byte)((pixelValue >> SHIFT_RED) & BYTE_MASK));
-                    mImgData.put((byte)((pixelValue >> SHIFT_GREEN) & BYTE_MASK));
-                    mImgData.put((byte)(pixelValue & BYTE_MASK));
+                    mImgData.put((byte) ((pixelValue >> SHIFT_RED) & BYTE_MASK));
+                    mImgData.put((byte) ((pixelValue >> SHIFT_GREEN) & BYTE_MASK));
+                    mImgData.put((byte) (pixelValue & BYTE_MASK));
                 } else {
                     // Float model
                     mImgData.putFloat((((pixelValue >> SHIFT_RED) & BYTE_MASK) - IMAGE_MED) / IMAGE_MED);
@@ -392,33 +406,112 @@ class ObjectDetector {
         for (int i = 0; i < mMaxDetectionsPerImage; ++i) {
             // Return coordinates relative to the detection area
             final RectF detection =
-                new RectF(
-                mOutputLocations[0][i][1],
-                mOutputLocations[0][i][0],
-                mOutputLocations[0][i][3],
-                mOutputLocations[0][i][2]);
+                    new RectF(
+                            mOutputLocations[0][i][1],
+                            mOutputLocations[0][i][0],
+                            mOutputLocations[0][i][3],
+                            mOutputLocations[0][i][2]);
             /*
              * SSD Mobilenet V1 Model assumes class 0 is background class
              * in label file and class labels start from 1 to number_of_classes+1,
              * while outputClasses correspond to class index from 0 to number_of_classes
              */
             recognitions.add(
-                new Recognition(
-                String.valueOf(i),
-                mLabels.get((int)mOutputClasses[0][i]),
-                mOutputScores[0][i],
-                detection));
+                    new Recognition(
+                            String.valueOf(i),
+                            mLabels.get((int) mOutputClasses[0][i]),
+                            mOutputScores[0][i],
+                            detection));
         }
         return recognitions;
     }
 
     /**
      * Function for recognize Bird
-     * */
-    Bird recognizeImageBird(final Bitmap bitmap){
-        Bird bird = new Bird("", "Bird from Detector", 0.0F, new RectF());
+     */
+    String recognizeImageBird(final Bitmap bitmap) {
+        final List<Mobile> mobiles = new ArrayList<>(mMaxDetectionsPerImage);
+        String message = "";
 
-        return bird;
+        if (mModelMobile == null) {
+            return message;
+        }
+        // Preprocess the image data from 0-255 int to normalized value based on the provided parameters.
+        bitmap.getPixels(mPixelValues, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+
+        mImgData.rewind();
+        for (int i = 0; i < mInputSize; ++i) {
+            for (int j = 0; j < mInputSize; ++j) {
+                // Get the data for the jth pixel in the ith row of the image
+                final int pixelValue = mPixelValues[i * mInputSize + j];
+                if (mIsQuantized) {
+                    // Quantized model
+                    mImgData.put((byte) ((pixelValue >> SHIFT_RED) & BYTE_MASK));
+                    mImgData.put((byte) ((pixelValue >> SHIFT_GREEN) & BYTE_MASK));
+                    mImgData.put((byte) (pixelValue & BYTE_MASK));
+                } else {
+                    // Float model
+                    mImgData.putFloat((((pixelValue >> SHIFT_RED) & BYTE_MASK) - IMAGE_MED) / IMAGE_MED);
+                    mImgData.putFloat((((pixelValue >> SHIFT_GREEN) & BYTE_MASK) - IMAGE_MED) / IMAGE_MED);
+                    mImgData.putFloat(((pixelValue & BYTE_MASK) - IMAGE_MED) / IMAGE_MED);
+                }
+            }
+        }
+
+
+        Object[] inputArray = {mImgData};
+
+        // Allocate buffers
+        mOutputLocations = new float[inputArray.length][mMaxDetectionsPerImage][4];
+        mOutputClasses = new float[inputArray.length][mMaxDetectionsPerImage];
+        mOutputScores = new float[inputArray.length][mMaxDetectionsPerImage];
+        mDetectionCount = new float[inputArray.length];
+        final Map<Integer, Object> outputMap = new HashMap<>();
+
+        /*
+         * Build output map to reflect the tensors trained in the model. This model has the order locations, classes,
+         * scores, and count.
+         */
+        outputMap.put(0, mOutputLocations);
+        outputMap.put(1, mOutputClasses);
+        outputMap.put(2, mOutputScores);
+        outputMap.put(3, mDetectionCount);
+
+        /*
+         * Accepts the formatted ByteBuffer as an inputArray, and runs an inference to populate detection data in the
+         * outputMap
+         */
+        try {
+            mModelMobile.runForMultipleInputsOutputs(inputArray, outputMap);
+
+            for (int i = 0; i < mMaxDetectionsPerImage; ++i) {
+                // Return coordinates relative to the detection area
+                final RectF detection =
+                        new RectF(
+                                mOutputLocations[0][i][1],
+                                mOutputLocations[0][i][0],
+                                mOutputLocations[0][i][3],
+                                mOutputLocations[0][i][2]);
+                /*
+                 * SSD Mobilenet V1 Model assumes class 0 is background class
+                 * in label file and class labels start from 1 to number_of_classes+1,
+                 * while outputClasses correspond to class index from 0 to number_of_classes
+                 */
+                mobiles.add(
+                        new Mobile(
+                                String.valueOf(i),
+                                mLabelsMobile.get((int) mOutputClasses[0][i]),
+                                mOutputScores[0][i],
+                                detection));
+            }
+            message = String.valueOf(mobiles.size());
+        } catch (Exception e) {
+            mobiles.clear();
+            message = e.getMessage();
+        }
+
+        return message;
+
     }
 
     /**

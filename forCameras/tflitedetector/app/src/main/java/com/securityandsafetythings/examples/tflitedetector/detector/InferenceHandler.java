@@ -28,6 +28,7 @@ import android.util.Size;
 
 import com.securityandsafetythings.examples.tflitedetector.R;
 import com.securityandsafetythings.examples.tflitedetector.detector.model.Bird;
+import com.securityandsafetythings.examples.tflitedetector.detector.model.Mobile;
 import com.securityandsafetythings.examples.tflitedetector.detector.model.Recognition;
 import com.securityandsafetythings.examples.tflitedetector.events.OnInferenceCompletedEvent;
 import com.securityandsafetythings.examples.tflitedetector.events.OnInferenceCompletedEventBird;
@@ -37,6 +38,7 @@ import com.securityandsafetythings.jumpsuite.commonhelpers.BitmapUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -147,12 +149,12 @@ public class InferenceHandler extends Handler {
         // Configure the detector with the selected acceleration type
         mDetector = new ObjectDetectorBuilder()
                 // Filename of the model stored in the assets folder of the app.
-                .setModelFileName("detect.tflite")
+                .setModelFileName("detect.tflite", "mobile.tflite")
                 /*
                  * Resource id of the label file that the model uses.
                  * The labels file is kept in the resources folder('/res/raw/') of the app.
                  */
-                .setLabelFileResourceId(R.raw.labelmap)
+                .setLabelFileResourceId(R.raw.labelmap, R.raw.labels_mobile)
                 // The model input size. It is denoted by inputSize x inputSize.
                 .setInputSize(300)
                 /*
@@ -193,7 +195,8 @@ public class InferenceHandler extends Handler {
      */
     private void handleRunningInference(final Bitmap imageBmp) {
         // Run object detection on the frame Bitmap.
-        final List<Recognition> detectionResults = detectObjectsInFrame(imageBmp);
+        //final List<Recognition> detectionResults = detectObjectsInFrame(imageBmp);
+        final List<Recognition> detectionResults = new ArrayList<>();
 
         /*
          * Filters detection results that meet or exceed the confidence threshold set in user preferences, renders
@@ -215,10 +218,13 @@ public class InferenceHandler extends Handler {
                mTotalInferenceTime / mTotalFrames,
                 framesProcessedPerSecond).broadcastEvent();
 
-
         // Processing for birds
-        final Bird bird = getBird(imageBmp);
-        new OnInferenceCompletedEventBird(annotatedImageBytes, bird.getLabel()).broadcastEvent();
+        final String mobile = getMobile(imageBmp);
+        if(!Objects.equals(mobile, "")){
+            new OnInferenceCompletedEventBird(annotatedImageBytes, String.valueOf(mobile)).broadcastEvent();
+        } else {
+            new OnInferenceCompletedEventBird(annotatedImageBytes, "Ningún mobile").broadcastEvent();
+        }
     }
 
     private List<Recognition> detectObjectsInFrame(final Bitmap imageBmp) {
@@ -249,7 +255,7 @@ public class InferenceHandler extends Handler {
     }
 
 
-    private Bird getBird(final Bitmap imageBmp){
+    private String getMobile(final Bitmap imageBmp){
         final Bitmap croppedBitmap = Bitmap.createBitmap(imageBmp,
                 mMarginLeft,
                 mMarginTop,
