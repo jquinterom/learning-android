@@ -429,59 +429,57 @@ class ObjectDetector {
     /**
      * Function for recognize Bird
      */
-    String recognizeImageBird(final Bitmap bitmap) {
+    List<Mobile> recognizeImageMobile(final Bitmap bitmap) {
         final List<Mobile> mobiles = new ArrayList<>(mMaxDetectionsPerImage);
-        String message = "";
+        try {
+            if (mModelMobile == null) {
+                return mobiles;
+            }
+            // Preprocess the image data from 0-255 int to normalized value based on the provided parameters.
+            bitmap.getPixels(mPixelValues, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
 
-        if (mModelMobile == null) {
-            return message;
-        }
-        // Preprocess the image data from 0-255 int to normalized value based on the provided parameters.
-        bitmap.getPixels(mPixelValues, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-
-        mImgData.rewind();
-        for (int i = 0; i < mInputSize; ++i) {
-            for (int j = 0; j < mInputSize; ++j) {
-                // Get the data for the jth pixel in the ith row of the image
-                final int pixelValue = mPixelValues[i * mInputSize + j];
-                if (mIsQuantized) {
-                    // Quantized model
-                    mImgData.put((byte) ((pixelValue >> SHIFT_RED) & BYTE_MASK));
-                    mImgData.put((byte) ((pixelValue >> SHIFT_GREEN) & BYTE_MASK));
-                    mImgData.put((byte) (pixelValue & BYTE_MASK));
-                } else {
-                    // Float model
-                    mImgData.putFloat((((pixelValue >> SHIFT_RED) & BYTE_MASK) - IMAGE_MED) / IMAGE_MED);
-                    mImgData.putFloat((((pixelValue >> SHIFT_GREEN) & BYTE_MASK) - IMAGE_MED) / IMAGE_MED);
-                    mImgData.putFloat(((pixelValue & BYTE_MASK) - IMAGE_MED) / IMAGE_MED);
+            mImgData.rewind();
+            for (int i = 0; i < mInputSize; ++i) {
+                for (int j = 0; j < mInputSize; ++j) {
+                    // Get the data for the jth pixel in the ith row of the image
+                    final int pixelValue = mPixelValues[i * mInputSize + j];
+                    if (mIsQuantized) {
+                        // Quantized model
+                        mImgData.put((byte) ((pixelValue >> SHIFT_RED) & BYTE_MASK));
+                        mImgData.put((byte) ((pixelValue >> SHIFT_GREEN) & BYTE_MASK));
+                        mImgData.put((byte) (pixelValue & BYTE_MASK));
+                    } else {
+                        // Float model
+                        mImgData.putFloat((((pixelValue >> SHIFT_RED) & BYTE_MASK) - IMAGE_MED) / IMAGE_MED);
+                        mImgData.putFloat((((pixelValue >> SHIFT_GREEN) & BYTE_MASK) - IMAGE_MED) / IMAGE_MED);
+                        mImgData.putFloat(((pixelValue & BYTE_MASK) - IMAGE_MED) / IMAGE_MED);
+                    }
                 }
             }
-        }
 
+            Object[] inputArray = {mImgData};
 
-        Object[] inputArray = {mImgData};
+            // Allocate buffers
+            mOutputLocations = new float[inputArray.length][mMaxDetectionsPerImage][4];
+            mOutputClasses = new float[inputArray.length][mMaxDetectionsPerImage];
+            mOutputScores = new float[inputArray.length][mMaxDetectionsPerImage];
+            mDetectionCount = new float[inputArray.length];
+            final Map<Integer, Object> outputMap = new HashMap<>();
 
-        // Allocate buffers
-        mOutputLocations = new float[inputArray.length][mMaxDetectionsPerImage][4];
-        mOutputClasses = new float[inputArray.length][mMaxDetectionsPerImage];
-        mOutputScores = new float[inputArray.length][mMaxDetectionsPerImage];
-        mDetectionCount = new float[inputArray.length];
-        final Map<Integer, Object> outputMap = new HashMap<>();
+            /*
+             * Build output map to reflect the tensors trained in the model. This model has the order locations, classes,
+             * scores, and count.
+             */
+            outputMap.put(0, mOutputLocations);
+            outputMap.put(1, mOutputClasses);
+            outputMap.put(2, mOutputScores);
+            outputMap.put(3, mDetectionCount);
 
-        /*
-         * Build output map to reflect the tensors trained in the model. This model has the order locations, classes,
-         * scores, and count.
-         */
-        outputMap.put(0, mOutputLocations);
-        outputMap.put(1, mOutputClasses);
-        outputMap.put(2, mOutputScores);
-        outputMap.put(3, mDetectionCount);
+            /*
+             * Accepts the formatted ByteBuffer as an inputArray, and runs an inference to populate detection data in the
+             * outputMap
+             */
 
-        /*
-         * Accepts the formatted ByteBuffer as an inputArray, and runs an inference to populate detection data in the
-         * outputMap
-         */
-        try {
             mModelMobile.runForMultipleInputsOutputs(inputArray, outputMap);
 
             for (int i = 0; i < mMaxDetectionsPerImage; ++i) {
@@ -504,14 +502,10 @@ class ObjectDetector {
                                 mOutputScores[0][i],
                                 detection));
             }
-            message = String.valueOf(mobiles.size());
         } catch (Exception e) {
             mobiles.clear();
-            message = e.getMessage();
         }
-
-        return message;
-
+        return mobiles;
     }
 
     /**

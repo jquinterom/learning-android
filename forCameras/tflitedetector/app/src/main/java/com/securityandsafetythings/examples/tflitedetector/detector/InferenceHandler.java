@@ -19,7 +19,6 @@ package com.securityandsafetythings.examples.tflitedetector.detector;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
-import android.graphics.RectF;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
@@ -27,19 +26,15 @@ import android.util.Log;
 import android.util.Size;
 
 import com.securityandsafetythings.examples.tflitedetector.R;
-import com.securityandsafetythings.examples.tflitedetector.detector.model.Bird;
 import com.securityandsafetythings.examples.tflitedetector.detector.model.Mobile;
 import com.securityandsafetythings.examples.tflitedetector.detector.model.Recognition;
-import com.securityandsafetythings.examples.tflitedetector.events.OnInferenceCompletedEvent;
-import com.securityandsafetythings.examples.tflitedetector.events.OnInferenceCompletedEventBird;
+import com.securityandsafetythings.examples.tflitedetector.events.OnInferenceCompletedEventMobile;
 import com.securityandsafetythings.examples.tflitedetector.utilities.EasySharedPreference;
 import com.securityandsafetythings.examples.tflitedetector.utilities.Renderer;
 import com.securityandsafetythings.jumpsuite.commonhelpers.BitmapUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Class responsible for handling the messages sent to the InferenceThread.
@@ -66,7 +61,8 @@ public class InferenceHandler extends Handler {
 
     /**
      * Constructs an InferenceHandler object.
-     * @param looper The {@code Looper} associated with the InferenceThread
+     *
+     * @param looper      The {@code Looper} associated with the InferenceThread
      * @param captureSize The size of the image as requested from the VideoPipeline.
      */
     public InferenceHandler(final Looper looper, final Size captureSize) {
@@ -78,21 +74,21 @@ public class InferenceHandler extends Handler {
     public void handleMessage(final android.os.Message msg) {
         final Message messageType = Message.fromOrdinal(msg.what);
         switch (messageType) {
-        case CONFIGURE_DETECTOR:
-            handleConfigureDetector();
-            break;
-        case RUN_INFERENCE:
-            final Bitmap imageBmp = (Bitmap)msg.obj;
-            handleRunningInference(imageBmp);
-            break;
-        default:
-            Log.e(LOGTAG, "Unknown message received on InferenceThread");
+            case CONFIGURE_DETECTOR:
+                handleConfigureDetector();
+                break;
+            case RUN_INFERENCE:
+                final Bitmap imageBmp = (Bitmap) msg.obj;
+                handleRunningInference(imageBmp);
+                break;
+            default:
+                Log.e(LOGTAG, "Unknown message received on InferenceThread");
         }
     }
 
     /**
      * Given the width and height of a region, provides a cropped width and height that matches a target aspect ratio
-     *
+     * <p>
      * This is simply an application of the formula:
      * Ratio = width / height
      * We are given Ratio, then we hold either width or height constant and solve for the other to produce the cropped
@@ -118,7 +114,7 @@ public class InferenceHandler extends Handler {
 
     private void prepareForInference() {
         // Crop to center region
-        final float targetAspectRatio = mDetectorInputSize.getWidth() / (float)mDetectorInputSize.getHeight();
+        final float targetAspectRatio = mDetectorInputSize.getWidth() / (float) mDetectorInputSize.getHeight();
         mCropSize = getCropArea(mCaptureSize.getWidth(), mCaptureSize.getHeight(), targetAspectRatio);
         /*
          * Calculate image margins
@@ -131,8 +127,8 @@ public class InferenceHandler extends Handler {
          * How big is our detectors input compared to the image preview? We'll use this to scale our input
          * appropriately
          */
-        final float scaleX = mDetectorInputSize.getWidth() / (float)mCropSize.getWidth();
-        final float scaleY = mDetectorInputSize.getHeight() / (float)mCropSize.getHeight();
+        final float scaleX = mDetectorInputSize.getWidth() / (float) mCropSize.getWidth();
+        final float scaleY = mDetectorInputSize.getHeight() / (float) mCropSize.getHeight();
         // Construct scaling matrix
         mScalingMatrix = new Matrix();
         mScalingMatrix.postScale(scaleX, scaleY);
@@ -196,35 +192,38 @@ public class InferenceHandler extends Handler {
     private void handleRunningInference(final Bitmap imageBmp) {
         // Run object detection on the frame Bitmap.
         //final List<Recognition> detectionResults = detectObjectsInFrame(imageBmp);
-        final List<Recognition> detectionResults = new ArrayList<>();
+        // final List<Recognition> detectionResults = new ArrayList<>();
+        // Processing for birds
+        final List<Mobile> mobiles = getMobile(imageBmp);
+
 
         /*
          * Filters detection results that meet or exceed the confidence threshold set in user preferences, renders
          * bounding boxes on the frame's {@code Bitmap}, and compresses the {@code Bitmap} into bytes.
          */
-        final byte[] annotatedImageBytes = getAnnotatedImageAsBytes(imageBmp, detectionResults);
+        //final byte[] annotatedImageBytes = getAnnotatedImageAsBytes(imageBmp, mobiles);
+        final byte[] annotatedImageBytes = getAnnotatedImageAsBytesMobile(imageBmp, mobiles);
+
 
         // Calculate the number of frames processed per second by the detector using different acceleration types.
         ++mTotalFrames;
+        /*
         // Time taken in seconds to process the number of frames denoted by mTotalFrames
         final long timeInSeconds = TimeUnit.MILLISECONDS.toSeconds(SystemClock.elapsedRealtime() - mStartTime);
-        int framesProcessedPerSecond = (int)mTotalFrames;
+        int framesProcessedPerSecond = (int) mTotalFrames;
         if (timeInSeconds > 1) {
-            framesProcessedPerSecond = (int)(mTotalFrames / timeInSeconds);
+            framesProcessedPerSecond = (int) (mTotalFrames / timeInSeconds);
         }
+
 
         // Send an event to indicate that inference has been completed.
         new OnInferenceCompletedEvent(annotatedImageBytes,
-               mTotalInferenceTime / mTotalFrames,
+                mTotalInferenceTime / mTotalFrames,
                 framesProcessedPerSecond).broadcastEvent();
+        */
 
-        // Processing for birds
-        final String mobile = getMobile(imageBmp);
-        if(!Objects.equals(mobile, "")){
-            new OnInferenceCompletedEventBird(annotatedImageBytes, String.valueOf(mobile)).broadcastEvent();
-        } else {
-            new OnInferenceCompletedEventBird(annotatedImageBytes, "Ningún mobile").broadcastEvent();
-        }
+        new OnInferenceCompletedEventMobile(annotatedImageBytes, String.valueOf(mobiles.get(0).getLabel())).broadcastEvent();
+
     }
 
     private List<Recognition> detectObjectsInFrame(final Bitmap imageBmp) {
@@ -239,12 +238,12 @@ public class InferenceHandler extends Handler {
          * boolean: whether or not to filter pixels, true provides smoothing
          */
         final Bitmap croppedBitmap = Bitmap.createBitmap(imageBmp,
-            mMarginLeft,
-            mMarginTop,
-            mCropSize.getWidth(),
-            mCropSize.getHeight(),
-            mScalingMatrix,
-            true);
+                mMarginLeft,
+                mMarginTop,
+                mCropSize.getWidth(),
+                mCropSize.getHeight(),
+                mScalingMatrix,
+                true);
         // Perform object detection using the detector
         final long inferenceStartTime = SystemClock.elapsedRealtime();
         final List<Recognition> detectionResults = mDetector.recognizeImage(croppedBitmap);
@@ -255,15 +254,19 @@ public class InferenceHandler extends Handler {
     }
 
 
-    private String getMobile(final Bitmap imageBmp){
-        final Bitmap croppedBitmap = Bitmap.createBitmap(imageBmp,
-                mMarginLeft,
-                mMarginTop,
-                mCropSize.getWidth(),
-                mCropSize.getHeight(),
-                mScalingMatrix,
-                true);
-        return mDetector.recognizeImageBird(croppedBitmap);
+    private List<Mobile> getMobile(final Bitmap imageBmp) {
+        try {
+            final Bitmap croppedBitmap = Bitmap.createBitmap(imageBmp,
+                    mMarginLeft,
+                    mMarginTop,
+                    mCropSize.getWidth(),
+                    mCropSize.getHeight(),
+                    mScalingMatrix,
+                    true);
+            return mDetector.recognizeImageMobile(croppedBitmap);
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
     }
 
     private byte[] getAnnotatedImageAsBytes(final Bitmap imageBmp, final List<Recognition> detectionResults) {
@@ -276,6 +279,23 @@ public class InferenceHandler extends Handler {
         }
         // Render the filtered detections on the original bitmap (not the one that was cropped for running inference).
         mRenderer.render(new Canvas(imageBmp), filteredDetections);
+        /*
+         * Compress the annotated Bitmap before displaying it in the browser. If the Bitmap is not compressed, then the
+         * browser will not be able to decipher the image and will show an error.
+         */
+        return BitmapUtils.compressBitmap(imageBmp);
+    }
+
+    private byte[] getAnnotatedImageAsBytesMobile(final Bitmap imageBmp, final List<Mobile> detectionResults) {
+        // Filter detections that meet the specified minimum confidence threshold
+        final List<Mobile> filteredDetections = new ArrayList<>();
+        for (Mobile obj : detectionResults) {
+            if (obj.getConfidence() >= EasySharedPreference.getInstance().getMinConfidenceLevel()) {
+                filteredDetections.add(obj);
+            }
+        }
+        // Render the filtered detections on the original bitmap (not the one that was cropped for running inference).
+        mRenderer.renderMobile(new Canvas(imageBmp), filteredDetections);
         /*
          * Compress the annotated Bitmap before displaying it in the browser. If the Bitmap is not compressed, then the
          * browser will not be able to decipher the image and will show an error.

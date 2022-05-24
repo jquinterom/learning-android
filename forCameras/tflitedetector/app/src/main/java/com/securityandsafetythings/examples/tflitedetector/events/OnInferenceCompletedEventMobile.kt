@@ -1,6 +1,6 @@
 package com.securityandsafetythings.examples.tflitedetector.events
 
-internal class OnInferenceCompletedEventBird(imageAsBytes: ByteArray, name: String?) : BaseEvent() {
+internal class OnInferenceCompletedEventMobile(imageAsBytes: ByteArray, name: String?) : BaseEvent() {
     // A byte array that represents the image annotated with bounding boxes.
     private var mImageBytes: ByteArray = imageAsBytes
 

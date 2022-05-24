@@ -21,6 +21,7 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.util.Size;
 
+import com.securityandsafetythings.examples.tflitedetector.detector.model.Mobile;
 import com.securityandsafetythings.examples.tflitedetector.detector.model.Recognition;
 
 import java.util.HashMap;
@@ -144,6 +145,44 @@ public final class Renderer {
                 box.left + TEXT_MARGIN,
                 box.top + TEXT_SIZE,
                 TEXT_PAINT);
+        }
+    }
+
+    /**
+     * Renders bounding boxes (for all the detected objects) on a canvas.
+     *
+     * @param canvas The canvas to use for drawing
+     * @param objects The objects whose bounding boxes must be rendered.
+     */
+    public void renderMobile(final Canvas canvas, final List<Mobile> objects) {
+        canvas.drawPaint(BACKGROUND_PAINT);
+        // Shade the areas that were not used in detection
+        canvas.drawRect(0, 0, mInputSize.getWidth(), mMargin.getHeight(), NON_DETECTED_AREA_PAINT);
+        canvas.drawRect(0, mCropArea.getHeight() + mMargin.getHeight(),
+                mInputSize.getWidth(), mInputSize.getHeight(),
+                NON_DETECTED_AREA_PAINT);
+        canvas.drawRect(0, mMargin.getHeight(), mMargin.getWidth(), mCropArea.getHeight() + mMargin.getHeight(), NON_DETECTED_AREA_PAINT);
+        canvas.drawRect(mMargin.getWidth() + mCropArea.getWidth(),
+                mMargin.getHeight(), mInputSize.getWidth(),
+                mCropArea.getHeight() + mMargin.getHeight(),
+                NON_DETECTED_AREA_PAINT);
+        // Render each object on the canvas
+        for (Mobile obj : objects) {
+            final RectF box = translate(obj.getLocation());
+            // Draw the translated bounding box
+            canvas.drawRect(box, getPaint(obj.getLabel()));
+            // Draw the label and confidence inside a black rectangle for readability
+            final String label = String.format(Locale.US, "%s: %.1f%%", obj.getLabel(), obj.getConfidence() * 100);
+            final float textW = TEXT_PAINT.measureText(label);
+            canvas.drawRect(box.left,
+                    box.top + TEXT_MARGIN,
+                    box.left + textW + (TEXT_MARGIN << 1),
+                    box.top + TEXT_SIZE + (TEXT_MARGIN << 1),
+                    TEXT_BG_PAINT);
+            canvas.drawText(label,
+                    box.left + TEXT_MARGIN,
+                    box.top + TEXT_SIZE,
+                    TEXT_PAINT);
         }
     }
 
