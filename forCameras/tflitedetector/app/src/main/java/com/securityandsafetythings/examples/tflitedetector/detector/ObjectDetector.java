@@ -26,6 +26,7 @@ import android.util.Size;
 import com.securityandsafetythings.examples.tflitedetector.BuildConfig;
 import com.securityandsafetythings.examples.tflitedetector.R;
 import com.securityandsafetythings.examples.tflitedetector.TfLiteDetectorApplication;
+import com.securityandsafetythings.examples.tflitedetector.detector.model.Bird;
 import com.securityandsafetythings.examples.tflitedetector.detector.model.Mobile;
 import com.securityandsafetythings.examples.tflitedetector.detector.model.Recognition;
 import com.securityandsafetythings.examples.tflitedetector.enums.AccelerationType;
@@ -38,13 +39,12 @@ import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.gpu.CompatibilityList;
 import org.tensorflow.lite.gpu.GpuDelegate;
 import org.tensorflow.lite.nnapi.NnApiDelegate;
+import org.tensorflow.lite.support.label.Category;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.FloatBuffer;
+import java.util.*;
 
 /**
  * ObjectDetector is the class responsible for preparing and accessing our model. It is based on the example provided by
@@ -73,9 +73,11 @@ class ObjectDetector {
     // Ordered list mapping from model output to string label
     private List<String> mLabels;
     private List<String> mLabelsMobile;
+    private List<String> mLabelsBird;
     // TensorFlow lite api
     private Interpreter mModel;
     private Interpreter mModelMobile;
+    private Interpreter mModelBird;
     // Whether the model is quantized or not. This affects how input images are processed
     private final boolean mIsQuantized;
     // Holds the int pixel values for each image
@@ -103,6 +105,7 @@ class ObjectDetector {
     private float[] mDetectionCount;
     // Buffer for the image data that will contain bytes in RGB ordering
     private final ByteBuffer mImgData;
+    private final ByteBuffer mResponseBird = null;
 
     private AutoCloseable mCloseable;
     private final Context mContext;
@@ -134,8 +137,10 @@ class ObjectDetector {
     @SuppressWarnings("MagicNumber")
     ObjectDetector(final String modelFileName,
                    final String modelFileNameMobile,
+                   final String modelFileNameBird,
                    final @RawRes int labelFileResId,
                    final @RawRes int labelFileResIdMobile,
+                   final @RawRes int labelFileResIdBird,
                    final int maxDetectionsPerImage,
                    final int inputSize,
                    final int numThreads,
@@ -156,19 +161,21 @@ class ObjectDetector {
         // Check if we are using Auto mode.
         mIsAuto = accelerationType == AccelerationType.AUTO;
         // Initializes the Interpreter as per requested by the user. If Auto mode is used, an optimal AccelerationType is used.
-        initializeInterpreter(accelerationType, modelFileName, modelFileNameMobile, labelFileResId, labelFileResIdMobile, numThreads, allowFp16PrecisionForFp32);
+        initializeInterpreter(accelerationType, modelFileName, modelFileNameMobile, modelFileNameBird, labelFileResId, labelFileResIdMobile, labelFileResIdBird, numThreads, allowFp16PrecisionForFp32);
     }
 
     private boolean initializeInterpreter(final AccelerationType accelerationType,
                                           final String modelFileName,
                                           final String modelFileNameMobile,
+                                          final String modelFileNameBird,
                                           final @RawRes int labelFileResId,
                                           final @RawRes int labelFileResIdMobile,
+                                          final @RawRes int labelFileResIdBird,
                                           final int numThreads,
                                           final boolean allowFp16PrecisionForFp32) {
         if (accelerationType == AccelerationType.AUTO) {
             // If using Auto mode, find the optimal AccelerationType and initialize the Interpreter with it.
-            initializeOptimalInterpreter(modelFileName, modelFileNameMobile, labelFileResId, labelFileResIdMobile, numThreads, allowFp16PrecisionForFp32);
+            initializeOptimalInterpreter(modelFileName, modelFileNameMobile, modelFileNameBird, labelFileResId, labelFileResIdMobile, labelFileResIdBird, numThreads, allowFp16PrecisionForFp32);
             return true;
         }
         // Configure TensorFlow interpreter options from parameters
@@ -197,6 +204,14 @@ class ObjectDetector {
 
             // Prepare the labels
             mLabelsMobile = ResourceHelper.loadLabels(mContext, labelFileResIdMobile);
+
+
+            mModelBird = new Interpreter(ResourceHelper.loadModelFile(
+                    mContext.getAssets(), modelFileNameBird), options);
+
+            // Prepare the labels
+            mLabelsBird = ResourceHelper.loadLabels(mContext, labelFileResIdBird);
+
             new OnObjectDetectorInitializedEvent(accelerationType).broadcastEvent();
             // Successfully initialized the interpreter.
             Log.i(LOGTAG, "ObjectDetector configured with acceleration mode " + accelerationType);
@@ -218,14 +233,16 @@ class ObjectDetector {
 
     private void initializeOptimalInterpreter(final String modelFileName,
                                               final String modelFileNameMobile,
+                                              final String modelFileNameBird,
                                               final @RawRes int labelFileResId,
                                               final @RawRes int labelFileResIdMobile,
+                                              final @RawRes int labelFileResIdBird,
                                               final int numThreads,
                                               final boolean allowFp16PrecisionForFp32) {
         // Try each AccelerationType in the list until a working one is found, or an exception is thrown.
         for (AccelerationType accelerationTypeToTry : AUTO_ACCELERATION_TYPES) {
             // Initializes the Interpreter based on the acceleration type
-            if (initializeInterpreter(accelerationTypeToTry, modelFileName, modelFileNameMobile, labelFileResId, labelFileResIdMobile, numThreads, allowFp16PrecisionForFp32)) {
+            if (initializeInterpreter(accelerationTypeToTry, modelFileName, modelFileNameMobile, modelFileNameBird, labelFileResId, labelFileResIdMobile, labelFileResIdBird, numThreads, allowFp16PrecisionForFp32)) {
                 // When the Interpreter is initialized successfully, break out of the loop.
                 break;
             }
@@ -506,6 +523,85 @@ class ObjectDetector {
             mobiles.clear();
         }
         return mobiles;
+    }
+
+    Bird recognizeImageBird(final Bitmap bitmap) {
+        //final List<Mobile> mobiles = new ArrayList<>(mMaxDetectionsPerImage);
+        Bird bird = new Bird("", "No Bird", 0.0F, new RectF());
+        try {
+            if (mModelBird == null) {
+                return bird;
+            }
+            // Preprocess the image data from 0-255 int to normalized value based on the provided parameters.
+            bitmap.getPixels(mPixelValues, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+
+            mImgData.rewind();
+            for (int i = 0; i < mInputSize; ++i) {
+                for (int j = 0; j < mInputSize; ++j) {
+                    // Get the data for the jth pixel in the ith row of the image
+                    final int pixelValue = mPixelValues[i * mInputSize + j];
+                    if (mIsQuantized) {
+                        // Quantized model
+                        mImgData.put((byte) ((pixelValue >> SHIFT_RED) & BYTE_MASK));
+                        mImgData.put((byte) ((pixelValue >> SHIFT_GREEN) & BYTE_MASK));
+                        mImgData.put((byte) (pixelValue & BYTE_MASK));
+                    } else {
+                        // Float model
+                        mImgData.putFloat((((pixelValue >> SHIFT_RED) & BYTE_MASK) - IMAGE_MED) / IMAGE_MED);
+                        mImgData.putFloat((((pixelValue >> SHIFT_GREEN) & BYTE_MASK) - IMAGE_MED) / IMAGE_MED);
+                        mImgData.putFloat(((pixelValue & BYTE_MASK) - IMAGE_MED) / IMAGE_MED);
+                    }
+                }
+            }
+
+            Object[] inputArray = {mImgData};
+
+            // Allocate buffers
+            mOutputLocations = new float[inputArray.length][mMaxDetectionsPerImage][4];
+            mOutputClasses = new float[inputArray.length][mMaxDetectionsPerImage];
+            mOutputScores = new float[inputArray.length][mMaxDetectionsPerImage];
+            mDetectionCount = new float[inputArray.length];
+            final Map<Integer, Object> outputMap = new HashMap<>();
+
+            /*
+             * Build output map to reflect the tensors trained in the model. This model has the order locations, classes,
+             * scores, and count.
+             */
+            int bufferSize = 1000 * java.lang.Float.SIZE / java.lang.Byte.SIZE;
+            ByteBuffer modelOutput = ByteBuffer.allocateDirect(bufferSize).order(ByteOrder.nativeOrder());
+            outputMap.put(0, modelOutput);
+
+            /*
+             * Accepts the formatted ByteBuffer as an inputArray, and runs an inference to populate detection data in the
+             * outputMap
+             */
+
+            mModelBird.runForMultipleInputsOutputs(inputArray, outputMap);
+
+            for (int i = 0; i < mMaxDetectionsPerImage; ++i) {
+                // Return coordinates relative to the detection area
+                final RectF detection =
+                        new RectF(
+                                mOutputLocations[0][i][1],
+                                mOutputLocations[0][i][0],
+                                mOutputLocations[0][i][3],
+                                mOutputLocations[0][i][2]);
+                /*
+                 * SSD Mobilenet V1 Model assumes class 0 is background class
+                 * in label file and class labels start from 1 to number_of_classes+1,
+                 * while outputClasses correspond to class index from 0 to number_of_classes
+                 */
+                bird = new Bird(String.valueOf(i),
+                        mLabelsMobile.get((int) mOutputClasses[0][i]),
+                        mOutputScores[0][i],
+                        detection
+                );
+            }
+        } catch (Exception e) {
+            bird = new Bird("", e.getMessage(), 0.0F, new RectF());
+            //bird = new Bird("", "error al procesar la imagen", 0.0F, new RectF());
+        }
+        return bird;
     }
 
     /**

@@ -19,6 +19,7 @@ package com.securityandsafetythings.examples.tflitedetector.detector;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.graphics.RectF;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
@@ -26,8 +27,11 @@ import android.util.Log;
 import android.util.Size;
 
 import com.securityandsafetythings.examples.tflitedetector.R;
+import com.securityandsafetythings.examples.tflitedetector.detector.model.Bird;
 import com.securityandsafetythings.examples.tflitedetector.detector.model.Mobile;
 import com.securityandsafetythings.examples.tflitedetector.detector.model.Recognition;
+import com.securityandsafetythings.examples.tflitedetector.events.OnInferenceCompletedEvent;
+import com.securityandsafetythings.examples.tflitedetector.events.OnInferenceCompletedEventBird;
 import com.securityandsafetythings.examples.tflitedetector.events.OnInferenceCompletedEventMobile;
 import com.securityandsafetythings.examples.tflitedetector.utilities.EasySharedPreference;
 import com.securityandsafetythings.examples.tflitedetector.utilities.Renderer;
@@ -35,6 +39,7 @@ import com.securityandsafetythings.jumpsuite.commonhelpers.BitmapUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Class responsible for handling the messages sent to the InferenceThread.
@@ -145,14 +150,15 @@ public class InferenceHandler extends Handler {
         // Configure the detector with the selected acceleration type
         mDetector = new ObjectDetectorBuilder()
                 // Filename of the model stored in the assets folder of the app.
-                .setModelFileName("detect.tflite", "mobile.tflite")
+                .setModelFileName("detect.tflite", "mobile.tflite", "bird.tflite")
                 /*
                  * Resource id of the label file that the model uses.
                  * The labels file is kept in the resources folder('/res/raw/') of the app.
                  */
-                .setLabelFileResourceId(R.raw.labelmap, R.raw.labels_mobile)
+                .setLabelFileResourceId(R.raw.labelmap, R.raw.labels_mobile, R.raw.labelsbirds)
                 // The model input size. It is denoted by inputSize x inputSize.
-                .setInputSize(300)
+                // .setInputSize(300)
+                .setInputSize(224)
                 /*
                  * The type of acceleration the user prefers to use
                  * for running inference on images.
@@ -192,22 +198,21 @@ public class InferenceHandler extends Handler {
     private void handleRunningInference(final Bitmap imageBmp) {
         // Run object detection on the frame Bitmap.
         //final List<Recognition> detectionResults = detectObjectsInFrame(imageBmp);
-        // final List<Recognition> detectionResults = new ArrayList<>();
+        final List<Recognition> detectionResults = new ArrayList<>();
         // Processing for birds
-        final List<Mobile> mobiles = getMobile(imageBmp);
+        //final List<Mobile> mobiles = getMobile(imageBmp);
 
 
         /*
          * Filters detection results that meet or exceed the confidence threshold set in user preferences, renders
          * bounding boxes on the frame's {@code Bitmap}, and compresses the {@code Bitmap} into bytes.
          */
-        //final byte[] annotatedImageBytes = getAnnotatedImageAsBytes(imageBmp, mobiles);
-        final byte[] annotatedImageBytes = getAnnotatedImageAsBytesMobile(imageBmp, mobiles);
+        final byte[] annotatedImageBytes = getAnnotatedImageAsBytes(imageBmp, detectionResults);
+        //final byte[] annotatedImageBytes = getAnnotatedImageAsBytesMobile(imageBmp, mobiles);
 
 
         // Calculate the number of frames processed per second by the detector using different acceleration types.
         ++mTotalFrames;
-        /*
         // Time taken in seconds to process the number of frames denoted by mTotalFrames
         final long timeInSeconds = TimeUnit.MILLISECONDS.toSeconds(SystemClock.elapsedRealtime() - mStartTime);
         int framesProcessedPerSecond = (int) mTotalFrames;
@@ -220,9 +225,12 @@ public class InferenceHandler extends Handler {
         new OnInferenceCompletedEvent(annotatedImageBytes,
                 mTotalInferenceTime / mTotalFrames,
                 framesProcessedPerSecond).broadcastEvent();
-        */
 
-        new OnInferenceCompletedEventMobile(annotatedImageBytes, String.valueOf(mobiles.get(0).getLabel())).broadcastEvent();
+        //new OnInferenceCompletedEventMobile(annotatedImageBytes, String.valueOf(mobiles.get(0).getLabel())).broadcastEvent();
+
+
+        final Bird bird = getBird(imageBmp);
+        new OnInferenceCompletedEventBird(annotatedImageBytes, bird.getLabel()).broadcastEvent();
 
     }
 
@@ -267,6 +275,23 @@ public class InferenceHandler extends Handler {
         } catch (Exception e) {
             return new ArrayList<>();
         }
+    }
+
+    private Bird getBird(final Bitmap imageBmp){
+        try{
+            final Bitmap croppedBitmap = Bitmap.createBitmap(imageBmp,
+                    mMarginLeft,
+                    mMarginTop,
+                    mCropSize.getWidth(),
+                    mCropSize.getHeight(),
+                    mScalingMatrix,
+                    true);
+
+            return mDetector.recognizeImageBird(croppedBitmap);
+        } catch (Exception e){
+            return  new Bird("", "Error al obtener información", 0.0F, new RectF());
+        }
+
     }
 
     private byte[] getAnnotatedImageAsBytes(final Bitmap imageBmp, final List<Recognition> detectionResults) {

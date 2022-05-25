@@ -157,7 +157,13 @@ public class MainService extends VideoService {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
-    public void onEvent(final OnInferenceCompletedEventMobile onInferenceCompletedEventBird) {
+    public void onEvent(final OnInferenceCompletedEventMobile onInferenceCompletedEventMobile) {
+        final InfoImageDTO infoImageDTO = new InfoImageDTO(Objects.requireNonNull(onInferenceCompletedEventMobile.getName()));
+        mRestEndPoint.setInfoForImage(onInferenceCompletedEventMobile.getImageAsBytes(), infoImageDTO);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
+    public void onEvent(final OnInferenceCompletedEventBird onInferenceCompletedEventBird) {
         final InfoImageDTO infoImageDTO = new InfoImageDTO(Objects.requireNonNull(onInferenceCompletedEventBird.getName()));
         mRestEndPoint.setInfoForImage(onInferenceCompletedEventBird.getImageAsBytes(), infoImageDTO);
     }

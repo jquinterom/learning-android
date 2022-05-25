@@ -25,12 +25,15 @@ import com.securityandsafetythings.examples.tflitedetector.enums.AccelerationTyp
 public class ObjectDetectorBuilder {
     private String mModelFileName = "detect.tflite";
     private String mModelFileNameMobile = "mobile.tflite";
+    private String mModelFileNameBird = "bird.tflite";
     private int mLabelFileResId = R.raw.labelmap;
     private int mLabelFileResIdMobile = R.raw.labels_mobile;
+    private int mLabelFileResIdBird = R.raw.labelsbirds;
     @SuppressWarnings("MagicNumber")
     private int mMaxDetectionsPerImage = 10;
     @SuppressWarnings("MagicNumber")
-    private int mInputSize = 300;
+    //private int mInputSize = 300;
+    private int mInputSize = 224;
     @SuppressWarnings("MagicNumber")
     private int mNumThreads = 4;
     private boolean mAllowFp16PrecisionForFp32 = false;
@@ -45,8 +48,10 @@ public class ObjectDetectorBuilder {
     ObjectDetector build() {
         return new ObjectDetector(mModelFileName,
                 mModelFileNameMobile,
+                mModelFileNameBird,
                 mLabelFileResId,
                 mLabelFileResIdMobile,
+                mLabelFileResIdBird,
                 mMaxDetectionsPerImage,
                 mInputSize,
                 mNumThreads,
@@ -62,9 +67,10 @@ public class ObjectDetectorBuilder {
      * @param name The name of the file that represents the model.
      * @return This builder as a convenience for call chaining.
      */
-    ObjectDetectorBuilder setModelFileName(final String name, final String nameMobile) {
+    ObjectDetectorBuilder setModelFileName(final String name, final String nameMobile, final  String nameBird) {
         mModelFileName = name;
         mModelFileNameMobile = nameMobile;
+        mModelFileNameBird = nameBird;
         return this;
     }
 
@@ -87,9 +93,10 @@ public class ObjectDetectorBuilder {
      * @param resId Resource id of the label file.
      * @return This builder as a convenience for call chaining.
      */
-    ObjectDetectorBuilder setLabelFileResourceId(final int resId, final int resIdMobile) {
+    ObjectDetectorBuilder setLabelFileResourceId(final int resId, final int resIdMobile, final int resIdBird) {
         mLabelFileResId = resId;
         mLabelFileResIdMobile = resIdMobile;
+        mLabelFileResIdBird = resIdBird;
         return this;
     }
 
