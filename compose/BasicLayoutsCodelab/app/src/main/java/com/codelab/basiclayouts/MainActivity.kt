@@ -252,11 +252,12 @@ private fun SootheBottomNavigation(modifier: Modifier = Modifier) {
 // Step: MySoothe App - Scaffold
 @Composable
 fun MySootheApp() {
-    // Implement composable here
-    Scaffold(
-        bottomBar = { SootheBottomNavigation() }
-    ) { padding ->
-        HomeScreen()
+    MySootheTheme {
+        Scaffold(
+            bottomBar = { SootheBottomNavigation() }
+        ) { padding ->
+            HomeScreen(Modifier.padding(padding))
+        }
     }
 }
 
@@ -350,8 +351,5 @@ fun BottomNavigationPreview() {
 @Preview(widthDp = 360, heightDp = 640)
 @Composable
 fun MySoothePreview() {
-    //MySootheApp()
-    MySootheTheme {
-        MySootheApp()
-    }
+    MySootheApp()
 }
