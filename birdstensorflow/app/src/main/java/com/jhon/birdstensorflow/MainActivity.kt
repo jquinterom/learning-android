@@ -23,6 +23,7 @@ import androidx.core.content.ContextCompat
 import com.jhon.birdstensorflow.databinding.ActivityMainBinding
 import com.jhon.birdstensorflow.ml.BirdsModel
 import org.tensorflow.lite.support.image.TensorImage
+import org.tensorflow.lite.support.label.Category
 import java.io.IOException
 
 class MainActivity : AppCompatActivity() {
@@ -144,7 +145,7 @@ class MainActivity : AppCompatActivity() {
         val tfImage = TensorImage.fromBitmap(bitmap)
 
         // process the image using trained and sort it in descending order
-        val outputs = birdsModel.process(tfImage)
+        val outputs : List<Category> = birdsModel.process(tfImage)
             .probabilityAsCategoryList.apply {
                 sortByDescending { it.score }
             }

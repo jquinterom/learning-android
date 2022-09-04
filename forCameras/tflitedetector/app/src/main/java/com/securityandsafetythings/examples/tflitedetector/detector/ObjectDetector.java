@@ -39,8 +39,8 @@ import org.tensorflow.lite.Interpreter;
 import org.tensorflow.lite.gpu.CompatibilityList;
 import org.tensorflow.lite.gpu.GpuDelegate;
 import org.tensorflow.lite.nnapi.NnApiDelegate;
-import org.tensorflow.lite.support.label.Category;
 
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -82,6 +82,7 @@ class ObjectDetector {
     private final boolean mIsQuantized;
     // Holds the int pixel values for each image
     private final int[] mPixelValues;
+    private int labelFileResIdBirdLocal;
 
     /**
      * outputLocations: array of shape [Batchsize, mMaxDetectionsPerImage, 4]
@@ -211,6 +212,7 @@ class ObjectDetector {
 
             // Prepare the labels
             mLabelsBird = ResourceHelper.loadLabels(mContext, labelFileResIdBird);
+            labelFileResIdBirdLocal = labelFileResIdBird;
 
             new OnObjectDetectorInitializedEvent(accelerationType).broadcastEvent();
             // Successfully initialized the interpreter.
@@ -578,29 +580,38 @@ class ObjectDetector {
 
             mModelBird.runForMultipleInputsOutputs(inputArray, outputMap);
 
+            modelOutput.rewind();
+
+            FloatBuffer probabilities = modelOutput.asFloatBuffer();
+            Float a = probabilities.get(1);
+
+            bird = new Bird(String.valueOf(0),
+                    a.toString(),
+                    55.0F,
+                    new RectF()
+            );
+
+
+            /*
             for (int i = 0; i < mMaxDetectionsPerImage; ++i) {
                 // Return coordinates relative to the detection area
-                final RectF detection =
-                        new RectF(
-                                mOutputLocations[0][i][1],
-                                mOutputLocations[0][i][0],
-                                mOutputLocations[0][i][3],
-                                mOutputLocations[0][i][2]);
+
                 /*
                  * SSD Mobilenet V1 Model assumes class 0 is background class
                  * in label file and class labels start from 1 to number_of_classes+1,
                  * while outputClasses correspond to class index from 0 to number_of_classes
-                 */
-                bird = new Bird(String.valueOf(i),
-                        mLabelsMobile.get((int) mOutputClasses[0][i]),
-                        mOutputScores[0][i],
-                        detection
-                );
+                mobiles.add(
+                        new Mobile(
+                                String.valueOf(i),
+                                mLabelsMobile.get((int) mOutputClasses[0][i]),
+                                mOutputScores[0][i],
+                                detection));
             }
-        } catch (Exception e) {
-            bird = new Bird("", e.getMessage(), 0.0F, new RectF());
-            //bird = new Bird("", "error al procesar la imagen", 0.0F, new RectF());
+            */
+        } catch (Exception ex) {
+            bird = new Bird("", ex.getMessage(), 0.0F, new RectF());
         }
+
         return bird;
     }
 
