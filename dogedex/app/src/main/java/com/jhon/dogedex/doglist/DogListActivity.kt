@@ -44,26 +44,21 @@ class DogListActivity : AppCompatActivity() {
             adapter.submitList(dogList)
         }
 
-        dogListViewModel.status.observe(this) {
-            status ->
-            when(status){
-                ApiResponseStatus.LOADING -> {
+        dogListViewModel.status.observe(this) { status ->
+            when (status) {
+                is ApiResponseStatus.Error -> {
+                    // Hiding progressbar
+                    Toast.makeText(this, status.messageId, Toast.LENGTH_LONG)
+                        .show()
+                    loadingWheel.visibility = View.GONE
+                }
+                is ApiResponseStatus.Loading -> {
                     // Showing progressbar
                     loadingWheel.visibility = View.VISIBLE
                 }
-                ApiResponseStatus.ERROR -> {
-                    // Hiding progressbar
-                    Toast.makeText(this, "Hubo un error al descargar recursos", Toast.LENGTH_LONG).show()
-                    loadingWheel.visibility = View.GONE
-                }
-                ApiResponseStatus.SUCCESS -> {
+                is ApiResponseStatus.Success -> {
                     // Hiding progressbar
                     loadingWheel.visibility = View.GONE
-                }
-                else -> {
-                    // Hiding progressbar
-                    loadingWheel.visibility = View.GONE
-                    Toast.makeText(this, "Estado desconocido", Toast.LENGTH_LONG).show()
                 }
             }
         }
