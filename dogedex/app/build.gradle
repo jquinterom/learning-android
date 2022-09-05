@@ -54,4 +54,7 @@ dependencies {
 
     // Moshi
     implementation 'com.squareup.retrofit2:converter-moshi:2.9.0'
+
+    // Coil - Images
+    implementation 'io.coil-kt:coil:2.1.0'
 }
