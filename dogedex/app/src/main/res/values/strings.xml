@@ -10,4 +10,16 @@
     <string name="dog_life_expectancy_format">%s years</string>
     <string name="unknown_host_exception_error">There is not internet connection</string>
     <string name="unknown_error">There was an error</string>
+    <!-- LogIn Fragment -->
+    <string name="login">Login</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="do_not_have_an_account">Do not have an account?</string>
+    <string name="register">Register</string>
+    <!-- SingUp Fragment -->
+    <string name="confirm_password">Confirm Password</string>
+    <string name="sign_up">Sing Up</string>
+    <string name="email_is_not_valid">Emails is not valid</string>
+    <string name="password_must_not_be_empty">Password is not empty</string>
+    <string name="passwords_do_not_match">Passwords do not match</string>
 </resources>
