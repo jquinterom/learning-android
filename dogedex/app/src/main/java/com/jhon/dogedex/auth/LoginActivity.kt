@@ -13,6 +13,7 @@ import com.jhon.dogedex.MainActivity
 import com.jhon.dogedex.R
 import com.jhon.dogedex.api.ApiResponseStatus
 import com.jhon.dogedex.databinding.ActivityLoginBinding
+import com.jhon.dogedex.model.User
 
 class LoginActivity : AppCompatActivity(), LoginFragment.LoginFragmentActions,
     SignUpFragment.SignUpFragmentActions {
@@ -40,6 +41,7 @@ class LoginActivity : AppCompatActivity(), LoginFragment.LoginFragmentActions,
 
         viewModel.user.observe(this) { user ->
             if (user != null) {
+                User.setLoggedInUser(this, user)
                 startMainActivity()
             }
         }
@@ -47,6 +49,7 @@ class LoginActivity : AppCompatActivity(), LoginFragment.LoginFragmentActions,
 
     private fun startMainActivity() {
         startActivity(Intent(this, MainActivity::class.java))
+        this.finish()
     }
 
     private fun showErrorDialog(messageId: Int) {
