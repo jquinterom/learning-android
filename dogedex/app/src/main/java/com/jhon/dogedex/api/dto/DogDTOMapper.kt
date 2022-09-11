@@ -1,6 +1,6 @@
 package com.jhon.dogedex.api.dto
 
-import com.jhon.dogedex.Dog
+import com.jhon.dogedex.model.Dog
 
 class DogDTOMapper {
     private fun fromDogDTOToDogDomain(dogDTO: DogDTO): Dog {

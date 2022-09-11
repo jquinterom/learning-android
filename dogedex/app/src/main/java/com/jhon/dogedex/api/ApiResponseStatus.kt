@@ -1,7 +1,5 @@
 package com.jhon.dogedex.api
 
-import com.jhon.dogedex.Dog
-
 sealed class ApiResponseStatus<T> {
     class Success<T>(val data: T) : ApiResponseStatus<T>()
     class Loading<T> : ApiResponseStatus<T>()

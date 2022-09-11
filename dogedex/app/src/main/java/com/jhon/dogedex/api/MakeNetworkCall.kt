@@ -1,5 +1,6 @@
 package com.jhon.dogedex.api
 
+import android.util.Log
 import com.jhon.dogedex.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -13,6 +14,12 @@ suspend fun <T> makeNetworkCall(
     } catch (e: UnknownHostException) {
         ApiResponseStatus.Error(R.string.unknown_host_exception_error)
     } catch (e: Exception) {
-        ApiResponseStatus.Error(R.string.unknown_error)
+        val errorMessage = when (e.message) {
+            "sign_up_error" -> R.string.error_sign_up
+            "sign_in_error" -> R.string.error_sign_in
+            "sign_already_exists" -> R.string.user_already_exists
+            else -> R.string.unknown_error
+        }
+        ApiResponseStatus.Error(errorMessage)
     }
 }

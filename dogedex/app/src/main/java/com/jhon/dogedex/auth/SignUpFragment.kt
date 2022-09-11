@@ -1,5 +1,6 @@
 package com.jhon.dogedex.auth
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Patterns
 import androidx.fragment.app.Fragment
@@ -10,6 +11,21 @@ import com.jhon.dogedex.R
 import com.jhon.dogedex.databinding.FragmentSignUpBinding
 
 class SignUpFragment : Fragment() {
+
+    interface SignUpFragmentActions {
+        fun onSignUpFieldsValidated(email: String, password: String, passwordConfirmation: String)
+    }
+
+    private lateinit var signUpFragmentActions: SignUpFragmentActions
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        signUpFragmentActions = try {
+            context as SignUpFragmentActions
+        } catch (e: ClassCastException) {
+            throw  ClassCastException("$context must implement LoginFragmentActions")
+        }
+    }
 
     private lateinit var binding: FragmentSignUpBinding
     override fun onCreateView(
@@ -59,6 +75,7 @@ class SignUpFragment : Fragment() {
         }
 
         // Perform sign up
+        signUpFragmentActions.onSignUpFieldsValidated(email, password, passwordConfirmation)
 
     }
 

@@ -1,6 +1,6 @@
 package com.jhon.dogedex.doglist
 
-import com.jhon.dogedex.Dog
+import com.jhon.dogedex.model.Dog
 import com.jhon.dogedex.api.ApiResponseStatus
 import com.jhon.dogedex.api.DogsApi.retrofitService
 import com.jhon.dogedex.api.dto.DogDTOMapper
