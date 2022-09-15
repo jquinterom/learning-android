@@ -24,4 +24,12 @@ class DogRepository {
             throw Exception(defaultResponse.message)
         }
     }
+
+    suspend fun getUserDogs() : ApiResponseStatus<List<Dog>> =
+        makeNetworkCall {
+            val dogLisApiResponse = retrofitService.getUserDogs()
+            val dogDTOList = dogLisApiResponse.data.dogs
+            val dogDTOMapper = DogDTOMapper()
+            dogDTOMapper.fromDogDTOListToDogDomainList(dogDTOList)
+        }
 }

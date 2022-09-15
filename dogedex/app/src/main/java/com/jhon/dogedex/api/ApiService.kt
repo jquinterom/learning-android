@@ -37,6 +37,9 @@ interface ApiService {
     @POST(ADD_DOG_TO_USER_URL)
     suspend fun addDogToUser(@Body addDogToUserDTO: AddDogToUserDTO): DefaultResponse
 
+    @Headers("${ApiServiceInterceptor.NEEDS_AUTH_HEADER_KEY}: true")
+    @GET(GET_USER_DOGS)
+    suspend fun getUserDogs() : DogListApiResponse
 
 }
 
