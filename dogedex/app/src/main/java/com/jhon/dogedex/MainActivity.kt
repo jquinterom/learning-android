@@ -9,13 +9,22 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
+import com.jhon.dogedex.WholeImageActivity.Companion.PHOTO_URI_KEY
 import com.jhon.dogedex.api.ApiServiceInterceptor
 import com.jhon.dogedex.auth.LoginActivity
 import com.jhon.dogedex.databinding.ActivityMainBinding
 import com.jhon.dogedex.doglist.DogListActivity
 import com.jhon.dogedex.model.User
 import com.jhon.dogedex.settings.SettingsActivity
+import java.io.File
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
 
@@ -25,7 +34,7 @@ class MainActivity : AppCompatActivity() {
         ) { isGranted: Boolean ->
             if (isGranted) {
                 // Opening Camera
-                //openCamera()
+                setupCamera()
             } else {
                 Toast.makeText(
                     this,
@@ -35,10 +44,15 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+    private lateinit var binding: ActivityMainBinding
+    private lateinit var imageCapture: ImageCapture
+    private lateinit var cameraExecutor: ExecutorService
+    private var isCameraReady = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val binding = ActivityMainBinding.inflate(layoutInflater)
+        binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         val user = User.getLoggedInUser(this)
@@ -57,7 +71,27 @@ class MainActivity : AppCompatActivity() {
             openDogListActivity()
         }
 
+        binding.takePhotoFab.setOnClickListener {
+            if (isCameraReady) takePhoto()
+        }
+
         requestCameraPermission()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (::cameraExecutor.isInitialized) cameraExecutor.shutdown()
+    }
+
+    private fun setupCamera() {
+        binding.cameraPreview.post {
+            imageCapture = ImageCapture.Builder()
+                .setTargetRotation(binding.cameraPreview.display.rotation)
+                .build()
+            cameraExecutor = Executors.newSingleThreadExecutor()
+            startCamera()
+            isCameraReady = true
+        }
     }
 
     private fun requestCameraPermission() {
@@ -68,7 +102,7 @@ class MainActivity : AppCompatActivity() {
                     Manifest.permission.CAMERA
                 ) == PackageManager.PERMISSION_GRANTED -> {
                     // Opening Camera
-                    //openCamera()
+                    setupCamera()
                 }
                 shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> {
                     AlertDialog.Builder(this)
@@ -90,8 +124,63 @@ class MainActivity : AppCompatActivity() {
             }
         } else {
             // Opening Camera
-            //openCamera()
+            setupCamera()
         }
+    }
+
+    private fun takePhoto() {
+        val outputFileOptions = ImageCapture.OutputFileOptions.Builder(getOutputPhotoFile()).build()
+        imageCapture.takePicture(outputFileOptions, cameraExecutor,
+            object : ImageCapture.OnImageSavedCallback {
+                override fun onError(exception: ImageCaptureException) {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Error taking photo ${exception.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+
+                override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+                    val photoUri = outputFileResults.savedUri
+                    openWholeImageActivity(photoUri.toString())
+                }
+            })
+    }
+
+    private fun openWholeImageActivity(photoUri: String) {
+        val intent = Intent(this, WholeImageActivity::class.java)
+        intent.putExtra(PHOTO_URI_KEY, photoUri)
+        startActivity(intent)
+    }
+
+    private fun getOutputPhotoFile(): File {
+        val mediaDir = externalMediaDirs.firstOrNull()?.let {
+            File(it, resources.getString(R.string.app_name) + ".jpg").apply { mkdirs() }
+        }
+        return if (mediaDir != null && mediaDir.exists()) {
+            mediaDir
+        } else {
+            filesDir
+        }
+    }
+
+    private fun startCamera() {
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+
+        cameraProviderFuture.addListener({
+            val cameraProvider = cameraProviderFuture.get()
+
+            val preview = Preview.Builder().build()
+            preview.setSurfaceProvider(binding.cameraPreview.surfaceProvider)
+
+            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+            cameraProvider.bindToLifecycle(
+                this, cameraSelector, preview, imageCapture
+            )
+
+        }, ContextCompat.getMainExecutor(this))
+
     }
 
     private fun openDogListActivity() {

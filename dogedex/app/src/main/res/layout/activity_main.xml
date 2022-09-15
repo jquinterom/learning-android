@@ -12,9 +12,14 @@
         android:layout_height="match_parent"
         tools:context=".MainActivity">
 
+        <androidx.camera.view.PreviewView
+            android:id="@+id/camera_preview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/take_php_fab"
+            android:id="@+id/take_photo_fab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
@@ -32,7 +37,7 @@
             android:contentDescription="@string/app_name"
             android:src="@drawable/ic_baseline_format_list_bulleted"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/take_php_fab" />
+            app:layout_constraintEnd_toStartOf="@id/take_photo_fab" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/settings_fab"
@@ -42,7 +47,7 @@
             android:contentDescription="@string/app_name"
             android:src="@drawable/ic_baseline_settings"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/take_php_fab" />
+            app:layout_constraintStart_toEndOf="@id/take_photo_fab" />
 
 
     </androidx.constraintlayout.widget.ConstraintLayout>
