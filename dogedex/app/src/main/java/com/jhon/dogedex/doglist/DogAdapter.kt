@@ -1,11 +1,14 @@
 package com.jhon.dogedex.doglist
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
+import com.jhon.dogedex.R
 import com.jhon.dogedex.model.Dog
 import com.jhon.dogedex.databinding.DogListItemBinding
 
@@ -46,16 +49,33 @@ class DogAdapter : ListAdapter<Dog, DogAdapter.DogViewHolder>(DiffCallback) {
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(dog: Dog) {
-            binding.dogListItemLayout.setOnClickListener {
-                onItemClickListener?.invoke(dog)
-            }
+            if (dog.inCollection) {
 
-            binding.dogListItemLayout.setOnLongClickListener {
-                onLongItemClickListener?.invoke(dog)
-                true
-            }
+                binding.dogListItemLayout.background = ContextCompat.getDrawable(
+                    binding.dogImage.context, R.drawable.dog_list_item_background
+                )
 
-            binding.dogImage.load(dog.imageUrl)
+                binding.dogImage.visibility = View.VISIBLE
+                binding.dogIndex.visibility = View.GONE
+
+                binding.dogListItemLayout.setOnClickListener {
+                    onItemClickListener?.invoke(dog)
+                }
+
+                binding.dogImage.load(dog.imageUrl)
+            } else {
+                binding.dogImage.visibility = View.GONE
+                binding.dogIndex.visibility = View.VISIBLE
+                binding.dogIndex.text = dog.index.toString()
+                binding.dogListItemLayout.background = ContextCompat.getDrawable(
+                    binding.dogImage.context, R.drawable.dog_list_item_null_background
+                )
+
+                binding.dogListItemLayout.setOnLongClickListener {
+                    onLongItemClickListener?.invoke(dog)
+                    true
+                }
+            }
         }
     }
 }
