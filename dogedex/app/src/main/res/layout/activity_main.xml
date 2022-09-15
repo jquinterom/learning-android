@@ -30,7 +30,7 @@
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
             android:contentDescription="@string/app_name"
-            android:src="@drawable/ic_baseline_photo_camera"
+            android:src="@drawable/ic_baseline_format_list_bulleted"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/take_php_fab" />
 
