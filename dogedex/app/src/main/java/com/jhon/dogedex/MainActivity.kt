@@ -9,10 +9,7 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.Preview
+import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import com.jhon.dogedex.WholeImageActivity.Companion.PHOTO_URI_KEY
@@ -169,14 +166,22 @@ class MainActivity : AppCompatActivity() {
 
         cameraProviderFuture.addListener({
             val cameraProvider = cameraProviderFuture.get()
-
             val preview = Preview.Builder().build()
+
             preview.setSurfaceProvider(binding.cameraPreview.surfaceProvider)
 
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+            val imageAnalysis = ImageAnalysis.Builder()
+                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .build()
+            imageAnalysis.setAnalyzer(cameraExecutor) { imageProxy ->
+                val rotationDegrees = imageProxy.imageInfo.rotationDegrees
+
+                imageProxy.close()
+            }
 
             cameraProvider.bindToLifecycle(
-                this, cameraSelector, preview, imageCapture
+                this, cameraSelector, preview, imageCapture, imageAnalysis
             )
 
         }, ContextCompat.getMainExecutor(this))
