@@ -16,8 +16,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
-import com.jhon.dogedex.DogDetailActivity
-import com.jhon.dogedex.DogDetailActivity.Companion.DOG_KEY
+import com.jhon.dogedex.dogdetail.DogDetailActivity
+import com.jhon.dogedex.dogdetail.DogDetailActivity.Companion.DOG_KEY
 import com.jhon.dogedex.LABELS_PATH
 import com.jhon.dogedex.MODEL_PATH
 import com.jhon.dogedex.R
@@ -25,6 +25,7 @@ import com.jhon.dogedex.api.ApiResponseStatus
 import com.jhon.dogedex.api.ApiServiceInterceptor
 import com.jhon.dogedex.auth.LoginActivity
 import com.jhon.dogedex.databinding.ActivityMainBinding
+import com.jhon.dogedex.dogdetail.DogDetailActivity.Companion.IS_RECOGNITION_KEY
 import com.jhon.dogedex.doglist.DogListActivity
 import com.jhon.dogedex.machinelearning.Classifier
 import com.jhon.dogedex.machinelearning.DogRecognition
@@ -33,7 +34,6 @@ import com.jhon.dogedex.model.User
 import com.jhon.dogedex.settings.SettingsActivity
 import org.tensorflow.lite.support.common.FileUtil
 import java.io.ByteArrayOutputStream
-import java.io.File
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -116,6 +116,7 @@ class MainActivity : AppCompatActivity() {
     private fun openDogDetailActivity(dog: Dog) {
         val intent = Intent(this, DogDetailActivity::class.java)
         intent.putExtra(DOG_KEY, dog)
+        intent.putExtra(IS_RECOGNITION_KEY, true)
         startActivity(intent)
     }
 
