@@ -1,12 +1,12 @@
 package com.jhon.dogedex.doglist
 
 import com.jhon.dogedex.R
-import com.jhon.dogedex.model.Dog
 import com.jhon.dogedex.api.ApiResponseStatus
 import com.jhon.dogedex.api.DogsApi.retrofitService
 import com.jhon.dogedex.api.dto.AddDogToUserDTO
 import com.jhon.dogedex.api.dto.DogDTOMapper
 import com.jhon.dogedex.api.makeNetworkCall
+import com.jhon.dogedex.model.Dog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
@@ -79,5 +79,15 @@ class DogRepository {
             val dogDTOList = dogLisApiResponse.data.dogs
             val dogDTOMapper = DogDTOMapper()
             dogDTOMapper.fromDogDTOListToDogDomainList(dogDTOList)
+        }
+
+    suspend fun getDogByMlId(mlDogId: String): ApiResponseStatus<Dog> =
+        makeNetworkCall {
+            val response = retrofitService.getDogByMlId(mlDogId)
+            if (!response.isSuccess) {
+                throw Exception(response.message)
+            }
+            val dogDTOMapper = DogDTOMapper()
+            dogDTOMapper.fromDogDTOToDogDomain(response.data.dog)
         }
 }

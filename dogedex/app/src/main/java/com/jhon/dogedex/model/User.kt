@@ -3,7 +3,6 @@ package com.jhon.dogedex.model
 import android.app.Activity
 import android.content.Context
 import android.os.Parcelable
-import com.jhon.dogedex.MainActivity
 import kotlinx.parcelize.Parcelize
 
 

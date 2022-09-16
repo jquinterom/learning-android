@@ -5,11 +5,10 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.navigation.findNavController
-import com.jhon.dogedex.MainActivity
+import com.jhon.dogedex.main.MainActivity
 import com.jhon.dogedex.R
 import com.jhon.dogedex.api.ApiResponseStatus
 import com.jhon.dogedex.databinding.ActivityLoginBinding
