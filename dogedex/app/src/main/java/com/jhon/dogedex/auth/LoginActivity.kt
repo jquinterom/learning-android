@@ -26,8 +26,7 @@ class LoginActivity : ComponentActivity(), LoginFragment.LoginFragmentActions,
         super.onCreate(savedInstanceState)
         setContent {
             DogedexTheme {
-                //LoginScreen()
-                SignUpScreen()
+                AuthScreen()
             }
         }
         /*

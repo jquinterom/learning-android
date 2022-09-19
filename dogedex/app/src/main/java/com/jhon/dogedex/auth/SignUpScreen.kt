@@ -23,10 +23,12 @@ import com.jhon.dogedex.composables.BackNavigationIcon
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
-fun SignUpScreen() {
+fun SignUpScreen(
+    onNavigationIconClick: () -> Unit
+) {
     Scaffold(
         modifier = Modifier.padding(0.dp),
-        topBar = { SignUpScreenToolbar() },
+        topBar = { SignUpScreenToolbar(onNavigationIconClick = onNavigationIconClick) },
     ) { Content() }
 }
 
@@ -97,12 +99,14 @@ private fun Content() {
 }
 
 @Composable
-private fun SignUpScreenToolbar() {
+private fun SignUpScreenToolbar(
+    onNavigationIconClick: () -> Unit
+) {
     TopAppBar(
-        title = { Text(text = stringResource(R.string.y_dog_collection)) },
+        title = { Text(text = stringResource(R.string.app_name)) },
         backgroundColor = Color.Red,
         contentColor = Color.White,
-        navigationIcon = { BackNavigationIcon {} },
+        navigationIcon = { BackNavigationIcon { onNavigationIconClick() } },
         elevation = 4.dp,
         modifier = Modifier.padding(bottom = 8.dp)
     )

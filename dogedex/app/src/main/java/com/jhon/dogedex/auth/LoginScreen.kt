@@ -24,15 +24,19 @@ import com.jhon.dogedex.composables.AuthField
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
-fun LoginScreen(status: ApiResponseStatus<Any>? = null) {
+fun LoginScreen(
+    onRegisterButtonClick: () -> Unit
+) {
     Scaffold(
         modifier = Modifier.padding(0.dp),
         topBar = { LoginScreenToolbar() },
-    ) { Content() }
+    ) { Content(onRegisterButtonClick = onRegisterButtonClick) }
 }
 
 @Composable
-private fun Content() {
+private fun Content(
+    onRegisterButtonClick: () -> Unit
+) {
     var email by remember {
         mutableStateOf("")
     }
@@ -89,7 +93,9 @@ private fun Content() {
 
         Text(
             modifier = Modifier
-                .clickable(enabled = true, onClick = {})
+                .clickable(enabled = true, onClick = {
+                    onRegisterButtonClick()
+                })
                 .fillMaxWidth()
                 .padding(16.dp),
             text = stringResource(id = R.string.register),
