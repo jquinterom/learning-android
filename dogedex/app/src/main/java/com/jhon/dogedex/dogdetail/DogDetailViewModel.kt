@@ -17,16 +17,10 @@ class DogDetailViewModel : ViewModel() {
     private val dogRepository = DogRepository()
 
     fun addDogToUser(dogId: Long) {
-
-        status.value = ApiResponseStatus.Error(messageId = R.string.password_must_not_be_empty)
-
-        /*
         viewModelScope.launch {
             status.value = ApiResponseStatus.Loading()
             handleAddDogToUserResponseStatus(dogRepository.addDogToUser(dogId))
         }
-
-         */
     }
 
     private fun handleAddDogToUserResponseStatus(apiResponseStatus: ApiResponseStatus<Any>) {
