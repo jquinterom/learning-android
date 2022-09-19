@@ -26,7 +26,7 @@ class DogDetailActivity : AppCompatActivity() {
         val binding = ActivityDogDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val dog = intent.extras?.getParcelable<Dog>(DOG_KEY)
+        val dog = intent?.extras?.getParcelable<Dog>(DOG_KEY)
         val isRecognition = intent?.extras?.getBoolean(IS_RECOGNITION_KEY, false) ?: false
 
         if (dog == null) {
@@ -42,7 +42,7 @@ class DogDetailActivity : AppCompatActivity() {
         binding.lifeExpectancy.text =
             resources.getString(R.string.dog_life_expectancy_format, dog.lifeExpectancy)
         binding.dogImage.load(dog.imageUrl)
-
+/*
         viewModel.status.observe(this) { status ->
             when (status) {
                 is ApiResponseStatus.Error -> {
@@ -62,6 +62,7 @@ class DogDetailActivity : AppCompatActivity() {
                 }
             }
         }
+        */
 
         binding.closeButton.setOnClickListener {
             if (isRecognition) {

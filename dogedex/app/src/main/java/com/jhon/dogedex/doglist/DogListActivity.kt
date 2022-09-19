@@ -1,16 +1,15 @@
 package com.jhon.dogedex.doglist
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
-import com.jhon.dogedex.dogdetail.DogDetailActivity
-import com.jhon.dogedex.dogdetail.DogDetailActivity.Companion.DOG_KEY
 import com.jhon.dogedex.api.ApiResponseStatus
 import com.jhon.dogedex.databinding.ActivityDogListBinding
+import com.jhon.dogedex.dogdetail.DogDetailComposeActivity
 
 private const val GRID_SPAN_COUNT = 3
 
@@ -32,8 +31,8 @@ class DogListActivity : AppCompatActivity() {
 
         adapter.setOnItemClickListener {
             // Pass dog to DogDetailActivity
-            val intent = Intent(this, DogDetailActivity::class.java)
-            intent.putExtra(DOG_KEY, it)
+            val intent = Intent(this, DogDetailComposeActivity::class.java)
+            intent.putExtra(DogDetailComposeActivity.DOG_KEY, it)
             startActivity(intent)
         }
 
