@@ -27,6 +27,7 @@ import com.jhon.dogedex.composables.AuthField
 fun LoginScreen(
     onLoginButtonClick: (String, String) -> Unit,
     onRegisterButtonClick: () -> Unit,
+    authViewModel: AuthViewModel,
 ) {
     Scaffold(
         modifier = Modifier.padding(0.dp),
@@ -34,7 +35,9 @@ fun LoginScreen(
     ) {
         Content(
             onLoginButtonClick = onLoginButtonClick,
-            onRegisterButtonClick = onRegisterButtonClick
+            onRegisterButtonClick = onRegisterButtonClick,
+            authViewModel = authViewModel,
+            resetFieldErrors = { authViewModel.resetErrors() }
         )
     }
 }
@@ -42,7 +45,9 @@ fun LoginScreen(
 @Composable
 private fun Content(
     onLoginButtonClick: (String, String) -> Unit,
-    onRegisterButtonClick: () -> Unit
+    onRegisterButtonClick: () -> Unit,
+    authViewModel: AuthViewModel,
+    resetFieldErrors: () -> Unit,
 ) {
     var email by remember {
         mutableStateOf("")
@@ -62,19 +67,26 @@ private fun Content(
             label = stringResource(id = R.string.email),
             modifier = Modifier
                 .fillMaxWidth(),
-            value = email, onTextChanged = {
+            value = email,
+            onTextChanged = {
                 email = it
-            })
+                resetFieldErrors()
+            },
+            errorMessageId = authViewModel.emailError.value
+        )
 
         AuthField(
             label = stringResource(id = R.string.password),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 16.dp),
-            value = password, onTextChanged = {
+            value = password,
+            onTextChanged = {
                 password = it
+                resetFieldErrors()
             },
-            visualTransformation = PasswordVisualTransformation()
+            visualTransformation = PasswordVisualTransformation(),
+            errorMessageId = authViewModel.passwordError.value
         )
 
         Button(

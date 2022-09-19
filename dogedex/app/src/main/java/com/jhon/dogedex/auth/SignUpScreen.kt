@@ -26,16 +26,25 @@ import com.jhon.dogedex.composables.BackNavigationIcon
 fun SignUpScreen(
     onNavigationIconClick: () -> Unit,
     onSignupButtonClick: (email: String, password: String, passwordConfirmation: String) -> Unit,
+    authViewModel: AuthViewModel,
 ) {
     Scaffold(
         modifier = Modifier.padding(0.dp),
         topBar = { SignUpScreenToolbar(onNavigationIconClick = onNavigationIconClick) },
-    ) { Content(onSignupButtonClick = onSignupButtonClick) }
+    ) {
+        Content(
+            onSignupButtonClick = onSignupButtonClick,
+            authViewModel = authViewModel,
+            resetFieldErrors = { authViewModel.resetErrors() }
+        )
+    }
 }
 
 @Composable
 private fun Content(
     onSignupButtonClick: (email: String, password: String, passwordConfirmation: String) -> Unit,
+    authViewModel: AuthViewModel,
+    resetFieldErrors: () -> Unit,
 ) {
     var email by remember {
         mutableStateOf("")
@@ -59,9 +68,13 @@ private fun Content(
             label = stringResource(id = R.string.email),
             modifier = Modifier
                 .fillMaxWidth(),
-            value = email, onTextChanged = {
+            value = email,
+            onTextChanged = {
                 email = it
-            })
+                resetFieldErrors()
+            },
+            errorMessageId = authViewModel.emailError.value
+        )
 
         AuthField(
             label = stringResource(id = R.string.password),
@@ -70,8 +83,10 @@ private fun Content(
                 .padding(top = 16.dp),
             value = password, onTextChanged = {
                 password = it
+                resetFieldErrors()
             },
-            visualTransformation = PasswordVisualTransformation()
+            visualTransformation = PasswordVisualTransformation(),
+            errorMessageId = authViewModel.passwordError.value
         )
 
         AuthField(
@@ -79,10 +94,13 @@ private fun Content(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 16.dp),
-            value = passwordConfirm, onTextChanged = {
+            value = passwordConfirm,
+            onTextChanged = {
                 passwordConfirm = it
+                resetFieldErrors()
             },
-            visualTransformation = PasswordVisualTransformation()
+            visualTransformation = PasswordVisualTransformation(),
+            errorMessageId = authViewModel.passwordConfirmationError.value
         )
 
         Button(
