@@ -17,44 +17,40 @@ import com.jhon.dogedex.databinding.ActivityLoginBinding
 import com.jhon.dogedex.dogdetail.ui.theme.DogedexTheme
 import com.jhon.dogedex.model.User
 
-class LoginActivity : ComponentActivity(), LoginFragment.LoginFragmentActions,
-    SignUpFragment.SignUpFragmentActions {
+class LoginActivity : ComponentActivity() {
 
     private val viewModel: AuthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            DogedexTheme {
-                AuthScreen()
-            }
-        }
-        /*
-        val binding = ActivityLoginBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+            val user = viewModel.user
 
-        viewModel.status.observe(this) { status ->
-            when (status) {
-                is ApiResponseStatus.Error -> {
-                    binding.loadingWheel.visibility = View.GONE
-                    showErrorDialog(status.messageId)
-                }
-                is ApiResponseStatus.Loading -> {
-                    Log.d("Loading", "Loading ...")
-                    binding.loadingWheel.visibility = View.VISIBLE
-                }
-                is ApiResponseStatus.Success -> binding.loadingWheel.visibility = View.GONE
-            }
-        }
-
-        viewModel.user.observe(this) { user ->
-            if (user != null) {
-                User.setLoggedInUser(this, user)
+            val userValue = user.value
+            if (userValue != null) {
+                User.setLoggedInUser(this, userValue)
                 startMainActivity()
             }
-        }
 
-         */
+            val status = viewModel.status
+
+            DogedexTheme {
+                AuthScreen(
+                    onErrorDialogDismiss = ::resetApiResponseStatus,
+                    status = status.value,
+                    onLoginButtonClick = { email, password ->
+                        viewModel.login(email = email, password = password)
+                    },
+                    onSignupButtonClick = { email, password, passwordConfirmation ->
+                        viewModel.signUp(
+                            email = email,
+                            password = password,
+                            passwordConfirmation = passwordConfirmation
+                        )
+                    },
+                )
+            }
+        }
     }
 
     private fun startMainActivity() {
@@ -62,35 +58,17 @@ class LoginActivity : ComponentActivity(), LoginFragment.LoginFragmentActions,
         this.finish()
     }
 
-    private fun showErrorDialog(messageId: Int) {
-        AlertDialog.Builder(this)
-            .setTitle(R.string.unknown_error)
-            .setMessage(messageId)
-            .setPositiveButton(android.R.string.ok) { _, _ -> /** Dismiss Dialog */ }
-            .create()
-            .show()
-    }
-
+    /*
     override fun onRegisterButtonClick() {
         findNavController(R.id.nav_host_fragment)
             .navigate(
                 LoginFragmentDirections.actionLoginFragmentToSignUpFragment()
             )
     }
+    */
 
-    override fun onLoginFieldsValidated(email: String, password: String) {
-        viewModel.login(email = email, password = password)
-    }
 
-    override fun onSignUpFieldsValidated(
-        email: String,
-        password: String,
-        passwordConfirmation: String
-    ) {
-        viewModel.signUp(
-            email = email,
-            password = password,
-            passwordConfirmation = passwordConfirmation
-        )
+    private fun resetApiResponseStatus() {
+        viewModel.resetApiResponseStatus()
     }
 }

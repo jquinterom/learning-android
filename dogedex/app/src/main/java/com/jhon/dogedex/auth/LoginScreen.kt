@@ -25,16 +25,23 @@ import com.jhon.dogedex.composables.AuthField
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun LoginScreen(
-    onRegisterButtonClick: () -> Unit
+    onLoginButtonClick: (String, String) -> Unit,
+    onRegisterButtonClick: () -> Unit,
 ) {
     Scaffold(
         modifier = Modifier.padding(0.dp),
         topBar = { LoginScreenToolbar() },
-    ) { Content(onRegisterButtonClick = onRegisterButtonClick) }
+    ) {
+        Content(
+            onLoginButtonClick = onLoginButtonClick,
+            onRegisterButtonClick = onRegisterButtonClick
+        )
+    }
 }
 
 @Composable
 private fun Content(
+    onLoginButtonClick: (String, String) -> Unit,
     onRegisterButtonClick: () -> Unit
 ) {
     var email by remember {
@@ -74,7 +81,9 @@ private fun Content(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            onClick = { /*TODO*/ }) {
+            onClick = {
+                onLoginButtonClick(email, password)
+            }) {
 
             Text(
                 text = stringResource(id = R.string.login),

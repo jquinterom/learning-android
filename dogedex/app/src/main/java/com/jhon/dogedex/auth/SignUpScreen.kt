@@ -24,16 +24,19 @@ import com.jhon.dogedex.composables.BackNavigationIcon
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun SignUpScreen(
-    onNavigationIconClick: () -> Unit
+    onNavigationIconClick: () -> Unit,
+    onSignupButtonClick: (email: String, password: String, passwordConfirmation: String) -> Unit,
 ) {
     Scaffold(
         modifier = Modifier.padding(0.dp),
         topBar = { SignUpScreenToolbar(onNavigationIconClick = onNavigationIconClick) },
-    ) { Content() }
+    ) { Content(onSignupButtonClick = onSignupButtonClick) }
 }
 
 @Composable
-private fun Content() {
+private fun Content(
+    onSignupButtonClick: (email: String, password: String, passwordConfirmation: String) -> Unit,
+) {
     var email by remember {
         mutableStateOf("")
     }
@@ -86,7 +89,9 @@ private fun Content() {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            onClick = { /*TODO*/ }) {
+            onClick = {
+                onSignupButtonClick(email, password, passwordConfirm)
+            }) {
 
             Text(
                 text = stringResource(id = R.string.sign_up),
