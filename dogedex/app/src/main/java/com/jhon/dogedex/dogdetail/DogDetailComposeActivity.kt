@@ -57,10 +57,15 @@ class DogDetailComposeActivity : ComponentActivity() {
                                 dog.id
                             )
                         },
+                        onErrorDialogDismiss = ::resetApiResponseStatus
                     )
                 }
             }
         }
+    }
+
+    private fun resetApiResponseStatus() {
+        viewModel.resetApiResponseStatus()
     }
 
     private fun onButtonCLicked(isRecognition: Boolean, dogId: Long) {

@@ -30,7 +30,8 @@ import com.jhon.dogedex.model.Dog
 fun DogDetailScreen(
     dog: Dog,
     status: ApiResponseStatus<Any>? = null,
-    onButtonClicked: () -> Unit
+    onButtonClicked: () -> Unit,
+    onErrorDialogDismiss: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -55,7 +56,13 @@ fun DogDetailScreen(
             Icon(imageVector = Icons.Filled.Check, contentDescription = null)
         }
 
-        if (status is ApiResponseStatus.Loading) LoadingWheel()
+        if (status is ApiResponseStatus.Loading) {
+            LoadingWheel()
+        } else if (status is ApiResponseStatus.Error) {
+            ErrorDialog(status = status, onErrorDialogDismiss = onErrorDialogDismiss)
+        }
+
+
     }
 }
 
@@ -70,6 +77,22 @@ fun LoadingWheel() {
             color = Color.Red
         )
     }
+}
+
+@Composable
+fun ErrorDialog(status: ApiResponseStatus.Error<Any>, onErrorDialogDismiss: () -> Unit) {
+    AlertDialog(onDismissRequest = { },
+        title = {
+            Text(text = stringResource(R.string.error_dialog_title))
+        },
+        text = {
+            Text(text = stringResource(id = status.messageId))
+        },
+        confirmButton = {
+            Button(onClick = { onErrorDialogDismiss() }) {
+                Text(text = stringResource(R.string.try_again))
+            }
+        })
 }
 
 @Composable
@@ -260,7 +283,7 @@ fun DogDetailScreenPreview() {
         "https://firebasestorage.googleapis.com/v0/b/perrodex-app.appspot.com/o/dog_details_images%2Fn02086079-pekinese.png?alt=media&token=f3cb4225-6690-42f2-a492-b77fcdeb5ee3",
         "10-11", "Friendly", "5", "6"
     )
-    DogDetailScreen(dog, onButtonClicked = {})
+    DogDetailScreen(dog, onButtonClicked = {}, onErrorDialogDismiss = {})
 }
 
 @Composable
