@@ -1,33 +1,32 @@
 package com.jhon.dogedex.auth
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.*
+import androidx.compose.material.Button
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.databinding.adapters.TextViewBindingAdapter
 import com.jhon.dogedex.R
-import com.jhon.dogedex.api.ApiResponseStatus
 import com.jhon.dogedex.composables.AuthField
+import com.jhon.dogedex.composables.BackNavigationIcon
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
-fun LoginScreen(status: ApiResponseStatus<Any>? = null) {
+fun SignUpScreen() {
     Scaffold(
         modifier = Modifier.padding(0.dp),
-        topBar = { LoginScreenToolbar() },
+        topBar = { SignUpScreenToolbar() },
     ) { Content() }
 }
 
@@ -38,6 +37,10 @@ private fun Content() {
     }
 
     var password by remember {
+        mutableStateOf("")
+    }
+
+    var passwordConfirm by remember {
         mutableStateOf("")
     }
 
@@ -66,6 +69,17 @@ private fun Content() {
             visualTransformation = PasswordVisualTransformation()
         )
 
+        AuthField(
+            label = stringResource(id = R.string.confirm_password),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp),
+            value = passwordConfirm, onTextChanged = {
+                passwordConfirm = it
+            },
+            visualTransformation = PasswordVisualTransformation()
+        )
+
         Button(
             modifier = Modifier
                 .fillMaxWidth()
@@ -73,39 +87,22 @@ private fun Content() {
             onClick = { /*TODO*/ }) {
 
             Text(
-                text = stringResource(id = R.string.login),
+                text = stringResource(id = R.string.sign_up),
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.Medium
             )
         }
 
-        Text(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            text = stringResource(id = R.string.do_not_have_an_account),
-            textAlign = TextAlign.Center,
-        )
-
-        Text(
-            modifier = Modifier
-                .clickable(enabled = true, onClick = {})
-                .fillMaxWidth()
-                .padding(16.dp),
-            text = stringResource(id = R.string.register),
-            textAlign = TextAlign.Center,
-            fontWeight = FontWeight.Medium,
-        )
     }
 }
 
-
 @Composable
-fun LoginScreenToolbar() {
+private fun SignUpScreenToolbar() {
     TopAppBar(
-        title = { Text(text = stringResource(R.string.app_name)) },
-        backgroundColor = colorResource(id = R.color.colorPrimaryDark),
+        title = { Text(text = stringResource(R.string.y_dog_collection)) },
+        backgroundColor = Color.Red,
         contentColor = Color.White,
+        navigationIcon = { BackNavigationIcon {} },
         elevation = 4.dp,
         modifier = Modifier.padding(bottom = 8.dp)
     )
