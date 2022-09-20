@@ -2,22 +2,25 @@ package com.jhon.dogedex.doglist
 
 import com.jhon.dogedex.R
 import com.jhon.dogedex.api.ApiResponseStatus
-import com.jhon.dogedex.api.DogsApi.retrofitService
+import com.jhon.dogedex.api.ApiService
 import com.jhon.dogedex.api.dto.AddDogToUserDTO
 import com.jhon.dogedex.api.dto.DogDTOMapper
 import com.jhon.dogedex.api.makeNetworkCall
 import com.jhon.dogedex.interfaces.DogTasks
 import com.jhon.dogedex.model.Dog
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-
-class DogRepository @Inject constructor(): DogTasks {
+class DogRepository @Inject constructor(
+    private val apiService: ApiService,
+    private val dispatcher :CoroutineDispatcher
+): DogTasks {
 
     override suspend fun getDogCollection(): ApiResponseStatus<List<Dog>> {
-        return withContext(Dispatchers.IO) {
+        return withContext(dispatcher) {
             val allDogsListResponseDeferred = async { downloadDogs() }
             val userDogsListResponseDeferred = async { getUserDogs() }
 
@@ -61,7 +64,7 @@ class DogRepository @Inject constructor(): DogTasks {
 
     private suspend fun downloadDogs(): ApiResponseStatus<List<Dog>> =
         makeNetworkCall {
-            val dogLisApiResponse = retrofitService.getAllDogs()
+            val dogLisApiResponse = apiService.getAllDogs()
             val dogDTOList = dogLisApiResponse.data.dogs
             val dogDTOMapper = DogDTOMapper()
             dogDTOMapper.fromDogDTOListToDogDomainList(dogDTOList)
@@ -69,7 +72,7 @@ class DogRepository @Inject constructor(): DogTasks {
 
     override suspend fun addDogToUser(dogId: Long): ApiResponseStatus<Any> = makeNetworkCall {
         val addDogToUserDTO = AddDogToUserDTO(dogId)
-        val defaultResponse = retrofitService.addDogToUser(addDogToUserDTO)
+        val defaultResponse = apiService.addDogToUser(addDogToUserDTO)
 
         if (!defaultResponse.isSuccess) {
             throw Exception(defaultResponse.message)
@@ -78,7 +81,7 @@ class DogRepository @Inject constructor(): DogTasks {
 
     private suspend fun getUserDogs(): ApiResponseStatus<List<Dog>> =
         makeNetworkCall {
-            val dogLisApiResponse = retrofitService.getUserDogs()
+            val dogLisApiResponse = apiService.getUserDogs()
             val dogDTOList = dogLisApiResponse.data.dogs
             val dogDTOMapper = DogDTOMapper()
             dogDTOMapper.fromDogDTOListToDogDomainList(dogDTOList)
@@ -86,7 +89,7 @@ class DogRepository @Inject constructor(): DogTasks {
 
     override suspend fun getDogByMlId(mlDogId: String): ApiResponseStatus<Dog> =
         makeNetworkCall {
-            val response = retrofitService.getDogByMlId(mlDogId)
+            val response = apiService.getDogByMlId(mlDogId)
             if (!response.isSuccess) {
                 throw Exception(response.message)
             }
