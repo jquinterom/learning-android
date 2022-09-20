@@ -7,13 +7,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jhon.dogedex.model.Dog
 import com.jhon.dogedex.api.ApiResponseStatus
+import com.jhon.dogedex.interfaces.DogTasks
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class DogListViewModel @Inject constructor(
-    private val dogRepository: DogRepository,
+    private val dogRepository: DogTasks,
 ) : ViewModel() {
     var dogList = mutableStateOf<List<Dog>>(listOf())
         private set

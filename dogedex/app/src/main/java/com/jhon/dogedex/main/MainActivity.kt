@@ -31,10 +31,12 @@ import com.jhon.dogedex.machinelearning.DogRecognition
 import com.jhon.dogedex.model.Dog
 import com.jhon.dogedex.model.User
 import com.jhon.dogedex.settings.SettingsActivity
+import dagger.hilt.android.AndroidEntryPoint
 import org.tensorflow.lite.support.common.FileUtil
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
     private val requestPermissionLauncher =

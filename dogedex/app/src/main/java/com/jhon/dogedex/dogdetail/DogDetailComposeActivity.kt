@@ -17,7 +17,9 @@ import com.jhon.dogedex.api.ApiResponseStatus
 import com.jhon.dogedex.dogdetail.ui.theme.DogedexTheme
 import com.jhon.dogedex.machinelearning.DogRecognition
 import com.jhon.dogedex.model.Dog
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class DogDetailComposeActivity : ComponentActivity() {
     companion object {
         const val DOG_KEY = "key"
