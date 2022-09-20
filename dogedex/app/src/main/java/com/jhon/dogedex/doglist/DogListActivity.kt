@@ -15,24 +15,18 @@ import com.jhon.dogedex.databinding.ActivityDogListBinding
 import com.jhon.dogedex.dogdetail.DogDetailComposeActivity
 import com.jhon.dogedex.dogdetail.ui.theme.DogedexTheme
 import com.jhon.dogedex.model.Dog
+import dagger.hilt.android.AndroidEntryPoint
 
-
+@AndroidEntryPoint
 class DogListActivity : ComponentActivity() {
-
-    private val viewModel: DogListViewModel by viewModels()
-
     @ExperimentalMaterialApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val status = viewModel.status
             DogedexTheme() {
-                val dogList = viewModel.dogList
                 DogListScreen(
                     onNavigationIconClick = ::onNavigationIconClick,
-                    dogList = dogList.value, onDogClicked = ::openDogDetailActivity,
-                    status = status.value,
-                    onErrorDialogDismiss = { resetApiResponseStatus() }
+                    onDogClicked = ::openDogDetailActivity,
                 )
             }
         }
@@ -46,10 +40,5 @@ class DogListActivity : ComponentActivity() {
 
     private fun onNavigationIconClick() {
         finish()
-    }
-
-
-    private fun resetApiResponseStatus() {
-        viewModel.resetApiResponseStatus()
     }
 }
