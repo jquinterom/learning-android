@@ -58,7 +58,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var imageCapture: ImageCapture
     private lateinit var cameraExecutor: ExecutorService
-    private lateinit var classifier: Classifier
     private var isCameraReady = false
     private val viewModel: MainViewModel by viewModels()
 
@@ -124,13 +123,6 @@ class MainActivity : AppCompatActivity() {
         startActivity(intent)
     }
 
-    override fun onStart() {
-        super.onStart()
-        viewModel.setupClassifier(
-            FileUtil.loadMappedFile(this@MainActivity, MODEL_PATH),
-            FileUtil.loadLabels(this@MainActivity, LABELS_PATH)
-        )
-    }
 
     override fun onDestroy() {
         super.onDestroy()

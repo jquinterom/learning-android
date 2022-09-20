@@ -3,12 +3,15 @@ package com.jhon.dogedex.machinelearning
 import android.annotation.SuppressLint
 import android.graphics.*
 import androidx.camera.core.ImageProxy
+import com.jhon.dogedex.interfaces.ClassifierTasks
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
+import javax.inject.Inject
 
-class ClassifierRepository(private val classifier: Classifier) {
-    suspend fun recognizeImage(imageProxy: ImageProxy): DogRecognition =
+class ClassifierRepository @Inject constructor(private val classifier: Classifier) :
+    ClassifierTasks {
+    override suspend fun recognizeImage(imageProxy: ImageProxy): DogRecognition =
         withContext(Dispatchers.IO) {
             val bitmap = convertImageProxyToBitmap(imageProxy)
             if (bitmap == null) {
