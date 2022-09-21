@@ -9,24 +9,24 @@ import com.jhon.dogedex.api.dto.SignUpDTO
 import com.jhon.dogedex.api.responses.*
 import com.jhon.dogedex.doglist.DogRepository
 import com.jhon.dogedex.model.Dog
-import com.jhon.dogedex.viewModel.DogedexCoroutineRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import org.junit.*
 import org.junit.Assert.*
+import java.net.UnknownHostException
 
 @ExperimentalCoroutinesApi
 class DogRepositoryTest {
     private var apiResponseStatus: ApiResponseStatus<List<Dog>>? = null
+    private var apiResponseStatusToError: ApiResponseStatus<List<Dog>>? = null
 
     companion object {
         private var dogRepository: DogRepository? = null
-        private const val nameFakeDog2 = "FakeDog2"
+        private var dogRepositoryToError: DogRepository? = null
+        private const val nameFakeSecond = "FakeDog2"
         private val fakeDogUser = DogDTO(
-            1, 2, nameFakeDog2, "", "", "", "",
+            1, 2, nameFakeSecond, "", "", "", "",
             "", "", "", ""
         )
         private var dogCollection: List<Dog>? = null
@@ -38,12 +38,18 @@ class DogRepositoryTest {
                 apiService = FakeApiService(),
                 dispatcher = UnconfinedTestDispatcher()
             )
+
+            dogRepositoryToError = DogRepository(
+                apiService = FakeApiService2(),
+                dispatcher = UnconfinedTestDispatcher()
+            )
         }
 
         @AfterClass
         @JvmStatic
         fun afterClass() {
             dogRepository = null
+            dogRepositoryToError = null
         }
     }
 
@@ -51,6 +57,8 @@ class DogRepositoryTest {
     fun setup(): Unit = runBlocking {
         apiResponseStatus = dogRepository?.getDogCollection()
         dogCollection = (apiResponseStatus as ApiResponseStatus.Success).data
+
+        apiResponseStatusToError = dogRepositoryToError?.getDogCollection()
     }
 
     class FakeApiService : ApiService {
@@ -68,6 +76,39 @@ class DogRepositoryTest {
                     )
                 ),
             )
+
+        }
+
+        override suspend fun login(loginDTO: LoginDTO): AuthApiResponse {
+            TODO("Not yet implemented")
+        }
+
+        override suspend fun signUp(signUpDTO: SignUpDTO): AuthApiResponse {
+            TODO("Not yet implemented")
+        }
+
+        override suspend fun addDogToUser(addDogToUserDTO: AddDogToUserDTO): DefaultResponse {
+            TODO("Not yet implemented")
+        }
+
+        override suspend fun getUserDogs(): DogListApiResponse {
+            return DogListApiResponse(
+                message = "success",
+                isSuccess = true,
+                data = DogListResponse(
+                    listOf(fakeDogUser)
+                ),
+            )
+        }
+
+        override suspend fun getDogByMlId(mlId: String): DogApiResponse {
+            TODO("Not yet implemented")
+        }
+    }
+
+    class FakeApiService2 : ApiService {
+        override suspend fun getAllDogs(): DogListApiResponse {
+            throw UnknownHostException()
         }
 
         override suspend fun login(loginDTO: LoginDTO): AuthApiResponse {
@@ -98,22 +139,27 @@ class DogRepositoryTest {
     }
 
     @Test
-    fun downloadDogListStatusesCorrect() {
+    fun testDownloadDogListStatusesCorrect() {
         assert(apiResponseStatus is ApiResponseStatus.Success)
     }
 
     @Test
-    fun sizeOfCollectionIsCorrect() {
+    fun testSizeOfCollectionIsCorrect() {
         assertEquals(2, dogCollection?.size)
     }
 
     @Test
-    fun validDogFakeForUserIsSecond() {
-        assertEquals(nameFakeDog2, dogCollection?.get(1)?.name)
+    fun testValidDogFakeForUserIsSecond() {
+        assertEquals(nameFakeSecond, dogCollection?.get(1)?.name)
     }
 
     @Test
-    fun validaNameDogIsEmpty(){
+    fun testValidaNameDogIsEmpty() {
         assertEquals("", dogCollection?.get(0)?.name)
+    }
+
+    @Test
+    fun testGetAllDogError() {
+        assert(apiResponseStatusToError is ApiResponseStatus.Error)
     }
 }
