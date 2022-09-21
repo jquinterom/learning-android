@@ -2,7 +2,6 @@ package com.jhon.dogedex.auth
 
 import com.jhon.dogedex.api.ApiResponseStatus
 import com.jhon.dogedex.api.ApiService
-import com.jhon.dogedex.api.DogsApi
 import com.jhon.dogedex.api.dto.LoginDTO
 import com.jhon.dogedex.api.dto.SignUpDTO
 import com.jhon.dogedex.api.dto.UserDTOMapper
