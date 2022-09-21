@@ -1,5 +1,6 @@
-package com.jhon.dogedex
+package com.jhon.dogedex.viewModel
 
+import com.jhon.dogedex.R
 import com.jhon.dogedex.api.ApiResponseStatus
 import com.jhon.dogedex.auth.AuthViewModel
 import com.jhon.dogedex.interfaces.AuthTasks
