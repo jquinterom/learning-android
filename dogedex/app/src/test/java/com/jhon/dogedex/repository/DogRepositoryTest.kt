@@ -1,12 +1,7 @@
 package com.jhon.dogedex.repository
 
+import com.jhon.dogedex.R
 import com.jhon.dogedex.api.ApiResponseStatus
-import com.jhon.dogedex.api.ApiService
-import com.jhon.dogedex.api.dto.AddDogToUserDTO
-import com.jhon.dogedex.api.dto.DogDTO
-import com.jhon.dogedex.api.dto.LoginDTO
-import com.jhon.dogedex.api.dto.SignUpDTO
-import com.jhon.dogedex.api.responses.*
 import com.jhon.dogedex.doglist.DogRepository
 import com.jhon.dogedex.model.Dog
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -14,7 +9,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import org.junit.*
 import org.junit.Assert.*
-import java.net.UnknownHostException
 
 @ExperimentalCoroutinesApi
 class DogRepositoryTest {
@@ -24,23 +18,32 @@ class DogRepositoryTest {
     companion object {
         private var dogRepository: DogRepository? = null
         private var dogRepositoryToError: DogRepository? = null
-        private const val nameFakeSecond = "FakeDog2"
-        private val fakeDogUser = DogDTO(
-            1, 2, nameFakeSecond, "", "", "", "",
-            "", "", "", ""
-        )
+        private var dogRepositoryToMlModelSuccess: DogRepository? = null
+        private var dogRepositoryToMlModelError: DogRepository? = null
+        const val nameFakeSecond = "FakeDog2"
+
         private var dogCollection: List<Dog>? = null
 
         @BeforeClass
         @JvmStatic
         fun beforeClass() {
             dogRepository = DogRepository(
-                apiService = FakeApiService(),
+                apiService = FakeServices.FakeApiService(),
                 dispatcher = UnconfinedTestDispatcher()
             )
 
             dogRepositoryToError = DogRepository(
-                apiService = FakeApiService2(),
+                apiService = FakeServices.FakeApiServiceToError(),
+                dispatcher = UnconfinedTestDispatcher()
+            )
+
+            dogRepositoryToMlModelSuccess = DogRepository(
+                apiService = FakeServices.FakeApiServiceToMlModelSuccess(),
+                dispatcher = UnconfinedTestDispatcher()
+            )
+
+            dogRepositoryToMlModelError = DogRepository(
+                apiService = FakeServices.FakeApiServiceToMlModelError(),
                 dispatcher = UnconfinedTestDispatcher()
             )
         }
@@ -59,83 +62,6 @@ class DogRepositoryTest {
         dogCollection = (apiResponseStatus as ApiResponseStatus.Success).data
 
         apiResponseStatusToError = dogRepositoryToError?.getDogCollection()
-    }
-
-    class FakeApiService : ApiService {
-        override suspend fun getAllDogs(): DogListApiResponse {
-            return DogListApiResponse(
-                message = "success",
-                isSuccess = true,
-                data = DogListResponse(
-                    listOf(
-                        DogDTO(
-                            0, 1, "FakeDog1", "", "", "", "",
-                            "", "", "", ""
-                        ),
-                        fakeDogUser
-                    )
-                ),
-            )
-
-        }
-
-        override suspend fun login(loginDTO: LoginDTO): AuthApiResponse {
-            TODO("Not yet implemented")
-        }
-
-        override suspend fun signUp(signUpDTO: SignUpDTO): AuthApiResponse {
-            TODO("Not yet implemented")
-        }
-
-        override suspend fun addDogToUser(addDogToUserDTO: AddDogToUserDTO): DefaultResponse {
-            TODO("Not yet implemented")
-        }
-
-        override suspend fun getUserDogs(): DogListApiResponse {
-            return DogListApiResponse(
-                message = "success",
-                isSuccess = true,
-                data = DogListResponse(
-                    listOf(fakeDogUser)
-                ),
-            )
-        }
-
-        override suspend fun getDogByMlId(mlId: String): DogApiResponse {
-            TODO("Not yet implemented")
-        }
-    }
-
-    class FakeApiService2 : ApiService {
-        override suspend fun getAllDogs(): DogListApiResponse {
-            throw UnknownHostException()
-        }
-
-        override suspend fun login(loginDTO: LoginDTO): AuthApiResponse {
-            TODO("Not yet implemented")
-        }
-
-        override suspend fun signUp(signUpDTO: SignUpDTO): AuthApiResponse {
-            TODO("Not yet implemented")
-        }
-
-        override suspend fun addDogToUser(addDogToUserDTO: AddDogToUserDTO): DefaultResponse {
-            TODO("Not yet implemented")
-        }
-
-        override suspend fun getUserDogs(): DogListApiResponse {
-            return DogListApiResponse(
-                message = "success",
-                isSuccess = true,
-                data = DogListResponse(
-                    listOf(fakeDogUser)
-                ),
-            )
-        }
-
-        override suspend fun getDogByMlId(mlId: String): DogApiResponse {
-            TODO("Not yet implemented")
-        }
     }
 
     @Test
@@ -162,4 +88,43 @@ class DogRepositoryTest {
     fun testGetAllDogError() {
         assert(apiResponseStatusToError is ApiResponseStatus.Error)
     }
+
+    @Test
+    fun testValidMessageError() {
+        assertEquals(
+            R.string.unknown_host_exception_error,
+            (apiResponseStatusToError as ApiResponseStatus.Error).messageId
+        )
+    }
+
+    @Test
+    fun testGetDogByMlSuccess(): Unit = runBlocking {
+        val apiResponseStatus = dogRepositoryToMlModelSuccess?.getDogByMlId("well")
+        assert(apiResponseStatus is ApiResponseStatus.Success)
+    }
+
+    @Test
+    fun testGetDogByMlSuccessIdIsCorrect(): Unit = runBlocking {
+        val apiResponseStatus = dogRepositoryToMlModelSuccess?.getDogByMlId("well")
+        assertEquals(
+            FakeServices.fakeDogUser.id,
+            (apiResponseStatus as ApiResponseStatus.Success).data.id
+        )
+    }
+
+    @Test
+    fun testGetDogByMlIsError(): Unit = runBlocking {
+        val apiResponseStatus = dogRepositoryToMlModelError?.getDogByMlId("well")
+        assert(apiResponseStatus is ApiResponseStatus.Error)
+    }
+
+    @Test
+    fun testGetDogByMlIsErrorMessageIdIsUnknown(): Unit = runBlocking {
+        val apiResponseStatus = dogRepositoryToMlModelError?.getDogByMlId("well")
+        assertEquals(
+            R.string.unknown_error,
+            (apiResponseStatus as ApiResponseStatus.Error).messageId
+        )
+    }
+
 }
