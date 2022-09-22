@@ -17,7 +17,7 @@ android {
         versionCode 1
         versionName "1.0"
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner "com.jhon.dogedex.CustomTestRunner"
     }
 
     buildTypes {
@@ -55,7 +55,7 @@ dependencies {
 
     // Coroutines
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1'
-    implementation 'androidx.activity:activity-ktx:1.5.1'
+    implementation 'androidx.activity:activity-ktx:1.6.0'
 
     // Retrofit
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
@@ -89,7 +89,7 @@ dependencies {
     implementation 'androidx.compose.material:material-icons-core:1.2.1'
     implementation 'androidx.compose.material:material-icons-extended:1.2.1'
     // Integration with activities
-    implementation 'androidx.activity:activity-compose:1.5.1'
+    implementation 'androidx.activity:activity-compose:1.6.0'
     // Integration with ViewModels
     implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.5.1'
     // Integration with observables
@@ -112,4 +112,9 @@ dependencies {
 
     // ComposeRule
     debugImplementation 'androidx.compose.ui:ui-test-manifest:1.2.1'
+
+    // For instrumented tests.
+    androidTestImplementation 'com.google.dagger:hilt-android-testing:2.38.1'
+    // ...with Kotlin.
+    kaptAndroidTest 'com.google.dagger:hilt-android-compiler:2.38.1'
 }
