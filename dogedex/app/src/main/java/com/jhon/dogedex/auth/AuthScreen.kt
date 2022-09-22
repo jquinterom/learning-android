@@ -1,6 +1,7 @@
 package com.jhon.dogedex.auth
 
 import androidx.compose.runtime.Composable
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,24 +15,44 @@ import com.jhon.dogedex.model.User
 
 @Composable
 fun AuthScreen(
-    status: ApiResponseStatus<User>?,
-    onErrorDialogDismiss: () -> Unit,
-    onLoginButtonClick: (String, String) -> Unit,
-    onSignupButtonClick: (email: String, password: String, passwordConfirmation: String) -> Unit,
-    authViewModel: AuthViewModel,
+    authViewModel: AuthViewModel = hiltViewModel(),
+    onUserLoggedIn: (User) -> Unit,
 ) {
+
+    val user = authViewModel.user
+
+    val userValue = user.value
+    if (userValue != null) {
+        onUserLoggedIn(userValue)
+    }
+
     val navController = rememberNavController()
+    val status = authViewModel.status.value
+
     AuthNavHost(
         navController = navController,
-        onLoginButtonClick = onLoginButtonClick,
-        onSignupButtonClick = onSignupButtonClick,
+        onLoginButtonClick = { email, password ->
+            authViewModel.login(
+                email = email,
+                password = password
+            )
+        },
+        onSignupButtonClick = { email, password, passwordConfirmation ->
+            authViewModel.signUp(
+                email = email,
+                password = password,
+                passwordConfirmation = passwordConfirmation
+            )
+        },
         authViewModel = authViewModel,
     )
 
     if (status is ApiResponseStatus.Loading) {
         LoadingWheel()
     } else if (status is ApiResponseStatus.Error) {
-        ErrorDialog(messageId = status.messageId, onErrorDialogDismiss = onErrorDialogDismiss)
+        ErrorDialog(messageId = status.messageId, onErrorDialogDismiss = {
+            authViewModel.resetApiResponseStatus()
+        })
     }
 }
 
