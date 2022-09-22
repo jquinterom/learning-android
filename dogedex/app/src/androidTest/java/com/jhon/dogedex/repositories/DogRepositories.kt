@@ -5,7 +5,7 @@ import com.jhon.dogedex.api.ApiResponseStatus
 import com.jhon.dogedex.interfaces.DogTasks
 import com.jhon.dogedex.model.Dog
 
-class Repositories {
+class DogRepositories {
 
     companion object {
         const val nameFakeDog1 = "FakeDog1"

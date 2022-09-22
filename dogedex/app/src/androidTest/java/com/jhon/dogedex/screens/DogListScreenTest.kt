@@ -6,7 +6,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.jhon.dogedex.doglist.DogListScreen
 import com.jhon.dogedex.doglist.DogListViewModel
-import com.jhon.dogedex.repositories.Repositories
+import com.jhon.dogedex.repositories.DogRepositories
 
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,7 +23,7 @@ class DogListScreenTest {
     @Test
     fun testProgressBarShowWhenLoadingState() {
         val viewModel = DogListViewModel(
-            dogRepository = Repositories.FakeDogRepository()
+            dogRepository = DogRepositories.FakeDogRepository()
         )
 
         composeTestRule.setContent {
@@ -39,7 +39,7 @@ class DogListScreenTest {
     @Test
     fun testErrorDialogsShowsIfErrorGettingDogs() {
         val viewModel = DogListViewModel(
-            dogRepository = Repositories.FakeDogRepositoryErrorGettingDogs()
+            dogRepository = DogRepositories.FakeDogRepositoryErrorGettingDogs()
         )
 
         composeTestRule.setContent {
@@ -53,7 +53,7 @@ class DogListScreenTest {
     @Test
     fun testDogListShowIfSuccessGettingDogs() {
         val viewModel = DogListViewModel(
-            dogRepository = Repositories.FakeDogRepositoryShowIfSuccessGettingDogs()
+            dogRepository = DogRepositories.FakeDogRepositoryShowIfSuccessGettingDogs()
         )
 
         composeTestRule.setContent {
