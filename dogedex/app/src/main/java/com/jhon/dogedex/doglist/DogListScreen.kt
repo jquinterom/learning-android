@@ -18,7 +18,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -94,7 +97,8 @@ fun DogGridItem(dog: Dog, onDogClicked: (Dog) -> Unit) {
         ) {
             Image(
                 modifier = Modifier
-                    .background(Color.White),
+                    .background(Color.White)
+                    .semantics { testTag = "dog-${dog.name}" },
                 painter = rememberAsyncImagePainter(model = dog.imageUrl),
                 contentDescription = null
             )
