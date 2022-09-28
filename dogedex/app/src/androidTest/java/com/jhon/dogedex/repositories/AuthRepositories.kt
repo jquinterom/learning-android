@@ -24,7 +24,9 @@ class AuthRepositories {
 
     class FakeAuthRepositoryToLogin @Inject constructor() : AuthTasks {
         override suspend fun login(email: String, password: String): ApiResponseStatus<User> {
-            TODO("Not yet implemented")
+            return ApiResponseStatus.Success(
+                User(1L, "jhon@jhon.com", "")
+            )
         }
 
         override suspend fun signUp(
