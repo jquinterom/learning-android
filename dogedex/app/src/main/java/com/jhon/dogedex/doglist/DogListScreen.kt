@@ -73,7 +73,7 @@ fun DogListScreen(
 @Composable
 fun DogListScreenTopBar(onClick: () -> Unit) {
     TopAppBar(
-        title = { Text(text = stringResource(R.string.y_dog_collection)) },
+        title = { Text(text = stringResource(R.string.my_dog_collection)) },
         backgroundColor = Color.White,
         contentColor = Color.Black,
         navigationIcon = { BackNavigationIcon(onClick = onClick) },

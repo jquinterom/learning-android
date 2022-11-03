@@ -48,6 +48,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name="androidx.test.core.app.InstrumentationActivityInvoker$BootstrapActivity"
+            tools:node="merge">
+            <intent-filter tools:node="removeAll" />
+        </activity>
+        <activity
+            android:name="androidx.test.core.app.InstrumentationActivityInvoker$EmptyActivity"
+            tools:node="merge">
+        <intent-filter tools:node="removeAll" />
+        </activity>
     </application>
 
 </manifest>
