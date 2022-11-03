@@ -6,6 +6,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.IdlingRegistry
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.*
@@ -20,6 +21,7 @@ import com.jhon.dogedex.interfaces.DogTasks
 import com.jhon.dogedex.machinelearning.DogRecognition
 import com.jhon.dogedex.main.MainActivity
 import com.jhon.dogedex.model.Dog
+import com.jhon.dogedex.testutils.EspressoIdlingResource
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -27,6 +29,8 @@ import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.UninstallModules
 import dagger.hilt.components.SingletonComponent
+import org.junit.After
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import javax.inject.Inject
@@ -66,13 +70,18 @@ class MainActivityTest {
         }
 
         override suspend fun getDogByMlId(mlDogId: String): ApiResponseStatus<Dog> {
-            TODO("Not yet implemented")
+            return ApiResponseStatus.Success(
+                Dog(
+                    87, 78, "Chow Chow", "", "", "", "",
+                    "", "", "", "", inCollection = false
+                )
+            )
         }
     }
 
     class FakeClassifierRepository @Inject constructor() : ClassifierTasks {
         override suspend fun recognizeImage(imageProxy: ImageProxy): DogRecognition {
-            return DogRecognition("sadf", 0.8F)
+            return DogRecognition("sadf", 80F)
         }
 
     }
@@ -97,20 +106,36 @@ class MainActivityTest {
         ): DogTasks
     }
 
+    @Before
+    fun registerIdlingResource() {
+        IdlingRegistry.getInstance().register(EspressoIdlingResource.idlingResource)
+    }
+
+    @After
+    fun unRegisterIdlingResource() {
+        IdlingRegistry.getInstance().unregister(EspressoIdlingResource.idlingResource)
+    }
+
     @Test
-    fun showAllFab(){
+    fun showAllFab() {
         onView(withId(R.id.take_photo_fab)).check(matches(isDisplayed()))
         onView(withId(R.id.dog_list_fab)).check(matches(isDisplayed()))
         onView(withId(R.id.settings_fab)).check(matches(isDisplayed()))
     }
 
     @Test
-    fun dogListOpensWhenClickingButton(){
+    fun dogListOpensWhenClickingButton() {
         onView(withId(R.id.dog_list_fab)).perform(click())
 
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val string = context.getString(R.string.my_dog_collection)
         composeTestRule.onNodeWithText(string).assertIsDisplayed()
+    }
+
+    @Test
+    fun whenRecognizingDogDetailsScreenOpens() {
+        onView(withId(R.id.take_photo_fab)).perform(click())
+        composeTestRule.onNodeWithTag(testTag = "close-details-screen-fab").assertIsDisplayed()
     }
 
 }
