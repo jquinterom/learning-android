@@ -11,13 +11,14 @@ import javax.inject.Inject
 
 class ClassifierRepository @Inject constructor(private val classifier: Classifier) :
     ClassifierTasks {
-    override suspend fun recognizeImage(imageProxy: ImageProxy): DogRecognition =
+    override suspend fun recognizeImage(imageProxy: ImageProxy): List<DogRecognition> =
         withContext(Dispatchers.IO) {
             val bitmap = convertImageProxyToBitmap(imageProxy)
             if (bitmap == null) {
-                DogRecognition("", 0f)
+
+                listOf(DogRecognition("", 0f))
             } else {
-                classifier.recognizeImage(bitmap = bitmap).first()
+                classifier.recognizeImage(bitmap = bitmap).subList(0,4)
             }
         }
 

@@ -9,6 +9,8 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -22,6 +24,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.jhon.dogedex.R
 import com.jhon.dogedex.api.ApiResponseStatus
@@ -32,10 +35,18 @@ import com.jhon.dogedex.model.Dog
 @Composable
 fun DogDetailScreen(
     dog: Dog,
+    probableDogsIds: List<String>,
+    isRecognition : Boolean,
     status: ApiResponseStatus<Any>? = null,
     onButtonClicked: () -> Unit,
-    onErrorDialogDismiss: () -> Unit
+    onErrorDialogDismiss: () -> Unit,
+    detailViewModel: DogDetailViewModel = hiltViewModel()
 ) {
+
+    val probableDogsDialogEnable = remember {
+        mutableStateOf(false)
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -43,7 +54,9 @@ fun DogDetailScreen(
             .padding(start = 8.dp, end = 8.dp, bottom = 16.dp),
         contentAlignment = Alignment.TopCenter
     ) {
-        DogInformation(dog)
+        DogInformation(dog, isRecognition) {
+            probableDogsDialogEnable.value = true
+        }
 
         Image(
             modifier = Modifier
@@ -66,11 +79,23 @@ fun DogDetailScreen(
         } else if (status is ApiResponseStatus.Error) {
             ErrorDialog(messageId = status.messageId, onErrorDialogDismiss = onErrorDialogDismiss)
         }
+
+        if(probableDogsDialogEnable.value) {
+            MostProbableDogsDialog(
+                mostProbableDogs = getFakeDogs(),
+                onShowMostProbableDialogDismiss = { probableDogsDialogEnable.value = false },
+                onItemClicked = {}
+            )
+        }
     }
 }
 
 @Composable
-fun DogInformation(dog: Dog) {
+fun DogInformation(
+    dog: Dog,
+    isRecognition: Boolean,
+    onProbableDogsButtonClick: () -> Unit,
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -130,6 +155,22 @@ fun DogInformation(dog: Dog) {
                     fontWeight = FontWeight.Medium,
                     textAlign = TextAlign.Center
                 )
+
+
+                if(isRecognition) {
+                    Button(
+                        modifier = Modifier.padding(16.dp),
+                        onClick = {
+                            onProbableDogsButtonClick()
+                        }) {
+                        Text(
+                            text = stringResource(id = R.string.not_your_dog),
+                            textAlign = TextAlign.Center,
+                            fontSize = 18.sp
+                        )
+
+                    }
+                }
 
                 Divider(
                     modifier = Modifier
@@ -257,7 +298,12 @@ fun DogDetailScreenPreview() {
         "https://firebasestorage.googleapis.com/v0/b/perrodex-app.appspot.com/o/dog_details_images%2Fn02086079-pekinese.png?alt=media&token=f3cb4225-6690-42f2-a492-b77fcdeb5ee3",
         "10-11", "Friendly", "5", "6"
     )
-    DogDetailScreen(dog, onButtonClicked = {}, onErrorDialogDismiss = {})
+    DogDetailScreen(
+        dog,
+        probableDogsIds = listOf(),
+        false,
+        onButtonClicked = {},
+        onErrorDialogDismiss = {})
 }
 
 @Composable

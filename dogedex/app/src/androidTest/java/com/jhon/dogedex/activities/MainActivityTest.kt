@@ -80,8 +80,8 @@ class MainActivityTest {
     }
 
     class FakeClassifierRepository @Inject constructor() : ClassifierTasks {
-        override suspend fun recognizeImage(imageProxy: ImageProxy): DogRecognition {
-            return DogRecognition("sadf", 80F)
+        override suspend fun recognizeImage(imageProxy: ImageProxy): List<DogRecognition> {
+            return listOf(DogRecognition("sadf", 80F))
         }
 
     }

@@ -24,6 +24,7 @@ class DogDetailComposeActivity : ComponentActivity() {
     companion object {
         const val DOG_KEY = "key"
         const val IS_RECOGNITION_KEY = "is_recognition"
+        const val MOST_PROBABLE_DOGS_IDS = "most_probable_dogs_ids"
     }
 
     private val viewModel: DogDetailViewModel by viewModels()
@@ -32,6 +33,7 @@ class DogDetailComposeActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val dog = intent?.extras?.getParcelable<Dog>(DOG_KEY)
+        val probableDogsIds = intent?.extras?.getStringArrayList(MOST_PROBABLE_DOGS_IDS) ?: listOf()
         val isRecognition = intent?.extras?.getBoolean(IS_RECOGNITION_KEY, false) ?: false
 
         if (dog == null) {
@@ -52,6 +54,8 @@ class DogDetailComposeActivity : ComponentActivity() {
                 DogedexTheme {
                     DogDetailScreen(
                         dog = dog,
+                        probableDogsIds = probableDogsIds,
+                        isRecognition  = isRecognition,
                         status = status.value,
                         onButtonClicked = {
                             onButtonCLicked(
