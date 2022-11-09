@@ -25,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.SavedStateHandle
 import coil.compose.rememberAsyncImagePainter
 import com.jhon.dogedex.R
 import com.jhon.dogedex.api.ApiResponseStatus
@@ -34,17 +35,20 @@ import com.jhon.dogedex.model.Dog
 
 @Composable
 fun DogDetailScreen(
-    dog: Dog,
-    probableDogsIds: List<String>,
-    isRecognition : Boolean,
-    status: ApiResponseStatus<Any>? = null,
-    onButtonClicked: () -> Unit,
-    onErrorDialogDismiss: () -> Unit,
+    finishActivity: () -> Unit,
     detailViewModel: DogDetailViewModel = hiltViewModel()
 ) {
 
     val probableDogsDialogEnable = remember {
         mutableStateOf(false)
+    }
+
+    val status = detailViewModel.status.value
+    val dog = detailViewModel.dog.value!!
+    val isRecognition = detailViewModel.isRecognition.value
+
+    if (status is ApiResponseStatus.Success) {
+        finishActivity()
     }
 
     Box(
@@ -66,26 +70,30 @@ fun DogDetailScreen(
             contentDescription = dog.name
         )
 
-        FloatingActionButton(
-            modifier = Modifier
-                .align(alignment = Alignment.BottomCenter)
-                .semantics { testTag = "close-details-screen-fab" },
-            onClick = { onButtonClicked() }) {
+        FloatingActionButton(modifier = Modifier
+            .align(alignment = Alignment.BottomCenter)
+            .semantics { testTag = "close-details-screen-fab" }, onClick = {
+            if (isRecognition) {
+                detailViewModel.addDogToUser()
+            } else {
+                finishActivity()
+            }
+        }) {
             Icon(imageVector = Icons.Filled.Check, contentDescription = null)
         }
 
         if (status is ApiResponseStatus.Loading) {
             LoadingWheel()
         } else if (status is ApiResponseStatus.Error) {
-            ErrorDialog(messageId = status.messageId, onErrorDialogDismiss = onErrorDialogDismiss)
+            ErrorDialog(
+                messageId = status.messageId
+            ) { detailViewModel.resetApiResponseStatus() }
         }
 
-        if(probableDogsDialogEnable.value) {
-            MostProbableDogsDialog(
-                mostProbableDogs = getFakeDogs(),
+        if (probableDogsDialogEnable.value) {
+            MostProbableDogsDialog(mostProbableDogs = getFakeDogs(),
                 onShowMostProbableDialogDismiss = { probableDogsDialogEnable.value = false },
-                onItemClicked = {}
-            )
+                onItemClicked = {})
         }
     }
 }
@@ -139,8 +147,7 @@ fun DogInformation(
 
                 Text(
                     text = stringResource(
-                        id = R.string.dog_life_expectancy_format,
-                        dog.lifeExpectancy
+                        id = R.string.dog_life_expectancy_format, dog.lifeExpectancy
                     ),
                     fontSize = 16.sp,
                     color = colorResource(id = R.color.text_black),
@@ -157,12 +164,10 @@ fun DogInformation(
                 )
 
 
-                if(isRecognition) {
-                    Button(
-                        modifier = Modifier.padding(16.dp),
-                        onClick = {
-                            onProbableDogsButtonClick()
-                        }) {
+                if (isRecognition) {
+                    Button(modifier = Modifier.padding(16.dp), onClick = {
+                        onProbableDogsButtonClick()
+                    }) {
                         Text(
                             text = stringResource(id = R.string.not_your_dog),
                             textAlign = TextAlign.Center,
@@ -173,10 +178,12 @@ fun DogInformation(
                 }
 
                 Divider(
-                    modifier = Modifier
-                        .padding(top = 8.dp, start = 8.dp, end = 8.dp, bottom = 16.dp),
-                    color = colorResource(id = R.color.divider),
-                    thickness = 1.dp
+                    modifier = Modifier.padding(
+                        top = 8.dp,
+                        start = 8.dp,
+                        end = 8.dp,
+                        bottom = 16.dp
+                    ), color = colorResource(id = R.color.divider), thickness = 1.dp
                 )
 
                 Row(
@@ -234,19 +241,16 @@ private fun VerticalDivider() {
     Divider(
         modifier = Modifier
             .height(42.dp)
-            .width(1.dp),
-        color = colorResource(id = R.color.divider)
+            .width(1.dp), color = colorResource(id = R.color.divider)
     )
 }
 
 @Composable
 private fun DogDataColumn(
-    gender: String, weight: String, height: String,
-    modifier: Modifier
+    gender: String, weight: String, height: String, modifier: Modifier
 ) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
+        horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier
     ) {
         Text(
             text = gender,
@@ -290,22 +294,6 @@ private fun DogDataColumn(
 }
 
 
-@Preview
-@Composable
-fun DogDetailScreenPreview() {
-    val dog = Dog(
-        1L, 88, "Pug", "Herding", "70", "33",
-        "https://firebasestorage.googleapis.com/v0/b/perrodex-app.appspot.com/o/dog_details_images%2Fn02086079-pekinese.png?alt=media&token=f3cb4225-6690-42f2-a492-b77fcdeb5ee3",
-        "10-11", "Friendly", "5", "6"
-    )
-    DogDetailScreen(
-        dog,
-        probableDogsIds = listOf(),
-        false,
-        onButtonClicked = {},
-        onErrorDialogDismiss = {})
-}
-
 @Composable
 private fun LifeIcon() {
     Row(
@@ -315,8 +303,7 @@ private fun LifeIcon() {
             .padding(start = 80.dp, end = 80.dp)
     ) {
         Surface(
-            shape = CircleShape,
-            color = colorResource(id = R.color.color_primary)
+            shape = CircleShape, color = colorResource(id = R.color.color_primary)
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_hearth_white),

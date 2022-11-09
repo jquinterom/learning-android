@@ -27,58 +27,16 @@ class DogDetailComposeActivity : ComponentActivity() {
         const val MOST_PROBABLE_DOGS_IDS = "most_probable_dogs_ids"
     }
 
-    private val viewModel: DogDetailViewModel by viewModels()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val dog = intent?.extras?.getParcelable<Dog>(DOG_KEY)
-        val probableDogsIds = intent?.extras?.getStringArrayList(MOST_PROBABLE_DOGS_IDS) ?: listOf()
-        val isRecognition = intent?.extras?.getBoolean(IS_RECOGNITION_KEY, false) ?: false
-
-        if (dog == null) {
-            Toast.makeText(
-                this,
-                resources.getString(R.string.error_showing_dog_not_found),
-                Toast.LENGTH_LONG
-            ).show()
-            finish()
-            return
-        }
-
         setContent {
-            val status = viewModel.status
-            if (status.value is ApiResponseStatus.Success) {
-                finish()
-            } else {
-                DogedexTheme {
-                    DogDetailScreen(
-                        dog = dog,
-                        probableDogsIds = probableDogsIds,
-                        isRecognition  = isRecognition,
-                        status = status.value,
-                        onButtonClicked = {
-                            onButtonCLicked(
-                                isRecognition = isRecognition,
-                                dog.id
-                            )
-                        },
-                        onErrorDialogDismiss = ::resetApiResponseStatus
-                    )
-                }
+            DogedexTheme {
+                DogDetailScreen(
+                    finishActivity = { finish() }
+                )
             }
         }
     }
 
-    private fun resetApiResponseStatus() {
-        viewModel.resetApiResponseStatus()
-    }
-
-    private fun onButtonCLicked(isRecognition: Boolean, dogId: Long) {
-        if (isRecognition) {
-            viewModel.addDogToUser(dogId = dogId)
-        } else {
-            finish()
-        }
-    }
 }
