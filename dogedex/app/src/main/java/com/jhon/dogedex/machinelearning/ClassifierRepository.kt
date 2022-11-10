@@ -18,7 +18,7 @@ class ClassifierRepository @Inject constructor(private val classifier: Classifie
 
                 listOf(DogRecognition("", 0f))
             } else {
-                classifier.recognizeImage(bitmap = bitmap).subList(0,4)
+                classifier.recognizeImage(bitmap = bitmap).subList(0,5)
             }
         }
 

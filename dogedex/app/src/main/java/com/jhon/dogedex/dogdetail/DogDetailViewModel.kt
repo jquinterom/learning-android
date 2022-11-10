@@ -10,6 +10,10 @@ import com.jhon.dogedex.doglist.DogRepository
 import com.jhon.dogedex.interfaces.DogTasks
 import com.jhon.dogedex.model.Dog
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -24,18 +28,39 @@ class DogDetailViewModel @Inject constructor(
     )
         private set
 
-    var probableDogsIds = mutableStateListOf(
+    private var probableDogsIds = mutableStateListOf(
         savedStateHandle.get<ArrayList<String>>(DogDetailComposeActivity.MOST_PROBABLE_DOGS_IDS)
+            ?: arrayListOf()
     )
-        private set
 
     var isRecognition = mutableStateOf(
-        savedStateHandle.get<Boolean>(DogDetailComposeActivity.MOST_PROBABLE_DOGS_IDS) ?: false
+        savedStateHandle.get<Boolean>(DogDetailComposeActivity.IS_RECOGNITION_KEY) ?: false
     )
         private set
 
     var status = mutableStateOf<ApiResponseStatus<Any>?>(null)
         private set
+
+    private var _probableDogList = MutableStateFlow<MutableList<Dog>>(mutableListOf())
+    val probableDogList: StateFlow<MutableList<Dog>>
+        get() = _probableDogList
+
+    fun getProbableDogs() {
+        _probableDogList.value.clear()
+        viewModelScope.launch {
+            dogRepository.getProbableDogs(probableDogsIds[0]).collect { apiResponseStatus ->
+                if (apiResponseStatus is ApiResponseStatus.Success) {
+                    val probableDogMutableList = _probableDogList.value.toMutableList()
+                    probableDogMutableList.add(apiResponseStatus.data)
+                    _probableDogList.value = probableDogMutableList
+                }
+            }
+        }
+    }
+
+    fun updateDog(newDog: Dog){
+        dog.value = newDog
+    }
 
     fun addDogToUser() {
         viewModelScope.launch {
