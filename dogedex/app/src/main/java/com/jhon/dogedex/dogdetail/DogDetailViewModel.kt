@@ -10,11 +10,9 @@ import com.jhon.dogedex.doglist.DogRepository
 import com.jhon.dogedex.interfaces.DogTasks
 import com.jhon.dogedex.model.Dog
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.net.UnknownHostException
 import javax.inject.Inject
 
 @HiltViewModel
@@ -48,17 +46,26 @@ class DogDetailViewModel @Inject constructor(
     fun getProbableDogs() {
         _probableDogList.value.clear()
         viewModelScope.launch {
-            dogRepository.getProbableDogs(probableDogsIds[0]).collect { apiResponseStatus ->
-                if (apiResponseStatus is ApiResponseStatus.Success) {
-                    val probableDogMutableList = _probableDogList.value.toMutableList()
-                    probableDogMutableList.add(apiResponseStatus.data)
-                    _probableDogList.value = probableDogMutableList
+            dogRepository.getProbableDogs(probableDogsIds[0])
+                /*
+                // Validar o cargar errores en Flow
+            .catch { errorStatus ->
+                if (errorStatus is UnknownHostException) {
+                    status.value = ApiResponseStatus.Error(R.string.unknown_error)
                 }
             }
+                */
+                .collect { apiResponseStatus ->
+                    if (apiResponseStatus is ApiResponseStatus.Success) {
+                        val probableDogMutableList = _probableDogList.value.toMutableList()
+                        probableDogMutableList.add(apiResponseStatus.data)
+                        _probableDogList.value = probableDogMutableList
+                    }
+                }
         }
     }
 
-    fun updateDog(newDog: Dog){
+    fun updateDog(newDog: Dog) {
         dog.value = newDog
     }
 
