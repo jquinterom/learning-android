@@ -29,6 +29,7 @@ import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import dagger.hilt.android.testing.UninstallModules
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.flow.Flow
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -76,6 +77,10 @@ class MainActivityTest {
                     "", "", "", "", inCollection = false
                 )
             )
+        }
+
+        override suspend fun getProbableDogs(probableDogsIds: ArrayList<String>): Flow<ApiResponseStatus<Dog>> {
+            TODO("Not yet implemented")
         }
     }
 

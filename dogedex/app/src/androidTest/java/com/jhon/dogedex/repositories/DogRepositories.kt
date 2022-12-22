@@ -4,6 +4,7 @@ import com.jhon.dogedex.R
 import com.jhon.dogedex.api.ApiResponseStatus
 import com.jhon.dogedex.interfaces.DogTasks
 import com.jhon.dogedex.model.Dog
+import kotlinx.coroutines.flow.Flow
 
 class DogRepositories {
 
@@ -25,6 +26,10 @@ class DogRepositories {
         override suspend fun getDogByMlId(mlDogId: String): ApiResponseStatus<Dog> {
             TODO("Not yet implemented")
         }
+
+        override suspend fun getProbableDogs(probableDogsIds: ArrayList<String>): Flow<ApiResponseStatus<Dog>> {
+            TODO("Not yet implemented")
+        }
     }
 
     class FakeDogRepositoryErrorGettingDogs : DogTasks {
@@ -37,6 +42,10 @@ class DogRepositories {
         }
 
         override suspend fun getDogByMlId(mlDogId: String): ApiResponseStatus<Dog> {
+            TODO("Not yet implemented")
+        }
+
+        override suspend fun getProbableDogs(probableDogsIds: ArrayList<String>): Flow<ApiResponseStatus<Dog>> {
             TODO("Not yet implemented")
         }
     }
@@ -63,6 +72,10 @@ class DogRepositories {
         }
 
         override suspend fun getDogByMlId(mlDogId: String): ApiResponseStatus<Dog> {
+            TODO("Not yet implemented")
+        }
+
+        override suspend fun getProbableDogs(probableDogsIds: ArrayList<String>): Flow<ApiResponseStatus<Dog>> {
             TODO("Not yet implemented")
         }
     }
